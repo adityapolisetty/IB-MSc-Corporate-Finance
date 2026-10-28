@@ -6,7 +6,7 @@
 
   // ---- Setup form (mirrors the Streamlit "Project Setup" page) ----
   // Opens on a standard intro example: invest £1,000, receive £400 a year for 4 years (IRR 21.9%).
-  let startYear = 0, minHurdle = 0, maxHurdle = 100, numYears = 5;
+  let startYear = 0, minHurdle = 0, maxHurdle = 30, numYears = 5;
   let usePerp = false, perpYear = 1;
   let useGrowth = false, growthYear = 1, growthRate = 0;
   let flows = [-1000, 400, 400, 400, 400, ...Array(45).fill(0)];
