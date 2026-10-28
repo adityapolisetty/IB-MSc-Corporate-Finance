@@ -1,7 +1,7 @@
 <script>
   import LineChart from './LineChart.svelte';
   import BarChart from './BarChart.svelte';
-  import { npv, findIrr, detectPattern, applyGrowth } from '../lib/irr.js';
+  import { npv, findIrr, detectPattern, applyGrowth, discountFactors } from '../lib/irr.js';
 
   // ---- Setup form (mirrors the Streamlit "Project Setup" page) ----
   let startYear = 0, minHurdle = 0, maxHurdle = 30, numYears = 4;
@@ -20,11 +20,15 @@
   function analyze() {
     let cashflows = flows.slice(0, numFields).map(v => Number(v) || 0);
     if (useGrowth && growthRate !== 0) cashflows = applyGrowth(cashflows, growthYear - startYear, growthRate);
+    // The perpetuity grows at the growth rate when growth has started by the perpetuity year.
+    const perpGrowth = usePerp && useGrowth && growthYear <= perpYear ? growthRate : 0;
     if (maxHurdle <= minHurdle) { error = 'Maximum hurdle rate must be greater than minimum hurdle rate.'; return; }
+    if (usePerp && maxHurdle <= perpGrowth + 0.5) { error = 'For a growing perpetuity the maximum hurdle rate must be above the growth rate.'; return; }
     if (cashflows.every(cf => cf === 0)) { error = 'Please enter at least one non-zero cash flow.'; return; }
     error = '';
-    project = { start: startYear, cashflows, perpYear: usePerp ? perpYear : null, minHurdle, maxHurdle, growth: useGrowth ? growthRate : 0 };
-    hurdle = (minHurdle + maxHurdle) / 2;
+    const perp = usePerp ? { index: perpYear - startYear, g: perpGrowth / 100 } : null;
+    project = { start: startYear, cashflows, perp, perpYear: usePerp ? perpYear : null, perpGrowth, minHurdle, maxHurdle, growth: useGrowth ? growthRate : 0 };
+    hurdle = (Math.max(minHurdle, usePerp ? perpGrowth + 0.5 : minHurdle) + maxHurdle) / 2;
     view = 'analysis';
   }
 
@@ -33,15 +37,20 @@
   $: cfs = project ? project.cashflows : [];
   $: start = project ? project.start : 0;
   $: pattern = project ? detectPattern(cfs) : 'mixed';
-  $: rawIrr = project ? findIrr(cfs, start) : null;
+  $: perp = project ? project.perp : null;
+  // With a growing perpetuity, NPV only exists for hurdle rates above g.
+  $: sliderMin = project ? (perp ? Math.max(project.minHurdle, project.perpGrowth + 0.5) : project.minHurdle) : 0;
+  $: rawIrr = project ? findIrr(cfs, start, perp) : null;
   $: irr = rawIrr !== null && rawIrr >= 0 ? rawIrr : null;
   $: r = hurdle / 100;
   $: years = cfs.map((_, i) => start + i);
-  $: factors = years.map(t => 1 / (1 + r) ** t);
+  $: factors = discountFactors(r, cfs.length, start, perp);
   $: discounted = cfs.map((cf, i) => cf * factors[i]);
   $: npvNow = discounted.reduce((a, b) => a + b, 0);
-  $: rateMax = project ? Math.max(30, project.maxHurdle) : 30;
-  $: curve = Array.from({ length: 201 }, (_, i) => { const x = rateMax * i / 200; return { x, y: npv(x / 100, cfs, start) }; });
+  $: rateMax = project ? Math.max(30, project.maxHurdle, irr !== null ? Math.ceil(irr * 115) : 0) : 30;
+  // A perpetuity's curve starts 2 points above g, where its NPV is finite and readable.
+  $: rateMin = perp ? project.perpGrowth + 2 : 0;
+  $: curve = Array.from({ length: 201 }, (_, i) => { const x = rateMin + (rateMax - rateMin) * i / 200; return { x, y: npv(x / 100, cfs, start, perp) }; });
   $: title = pattern === 'investment' ? 'Investment pattern' : pattern === 'financing' ? 'Financing pattern' : 'Mixed pattern (multiple IRRs possible)';
   $: decision = decide(pattern, irr, r, npvNow);
 
@@ -103,11 +112,11 @@
       <button class="button" type="button" on:click={() => (view = 'input')}>← New project</button>
       <h1 class="page-title">{title}</h1>
     </div>
-    {#if project.perpYear !== null}<p class="note">Perpetuity model: the cash flow from year {project.perpYear} continues indefinitely.</p>{/if}
+    {#if project.perpYear !== null}<p class="note">Perpetuity: the year {project.perpYear} cash flow continues forever{project.perpGrowth !== 0 ? `, growing at ${project.perpGrowth.toFixed(1)}% a year` : ''}. Its bar below is the present value of the whole perpetuity, cash flow / (r - g), discounted to today.</p>{/if}
 
     <label class="slider">
       <span class="control-heading"><span>Hurdle rate</span><output>{hurdle.toFixed(1)}%</output></span>
-      <input type="range" min={project.minHurdle} max={project.maxHurdle} step="0.5" bind:value={hurdle} />
+      <input type="range" min={sliderMin} max={project.maxHurdle} step="0.5" bind:value={hurdle} />
     </label>
 
     <p class={`decision ${decision.tone}`}>{decision.text}</p>
@@ -132,7 +141,7 @@
         showLegend={false}
         scaleCues={false}
         animate={false}
-        xDomain={[0, rateMax]}
+        xDomain={[rateMin, rateMax]}
         series={[{ id: 'npv', label: 'NPV', color: pattern === 'investment' ? 'npv-line' : 'reject', points: curve }]}
         references={[{ axis: 'y', value: 0, label: '' }, ...(irr !== null ? [{ axis: 'x', value: irr * 100, label: `IRR = ${(irr * 100).toFixed(2)}%` }] : [])]}
         markers={[{ x: hurdle, y: npvNow, color: npvNow > 0 ? 'accept' : 'reject', label: `${hurdle.toFixed(1)}%` }]}
