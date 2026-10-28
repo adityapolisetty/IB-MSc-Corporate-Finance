@@ -1,0 +1,8 @@
+---
+import GuideLayout from '../layouts/GuideLayout.astro';
+import NpvIrrExplorer from '../components/NpvIrrExplorer.svelte';
+---
+
+<GuideLayout title="NPV and IRR" description="Enter a project's cash flows and see how the hurdle rate drives NPV, and when the IRR rule flips." current="npv-irr">
+  <NpvIrrExplorer client:load />
+</GuideLayout>

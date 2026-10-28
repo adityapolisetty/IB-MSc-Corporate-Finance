@@ -1,0 +1,17 @@
+---
+import { withBase } from '../lib/base.js';
+// No separate home page: the site root forwards at once to the first guide page.
+const target = withBase('npv-irr/');
+const canonical = new URL(target, Astro.site).href;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="refresh" content={`0;url=${target}`} />
+    <meta name="robots" content="noindex" />
+    <link rel="canonical" href={canonical} />
+    <title>NPV and IRR</title>
+  </head>
+  <body><a href={target}>NPV and IRR</a></body>
+</html>
