@@ -170,13 +170,13 @@
     {/if}
 
     <div class="template">
-      <h3>Problem 2 · Forgo maintenance</h3>
+      <h3>Question 2 · Forgo maintenance</h3>
       <p>Save £540k a year in years 1-3, then pay £1.9m in year 4 (in £000). <span class="parts">Covers 2 a.-c.</span></p>
-      <button type="button" disabled={!unlocked} on:click={() => loadTemplate(ps2)}>Load Problem 2</button>
+      <button type="button" disabled={!unlocked} on:click={() => loadTemplate(ps2)}>Load Question 2</button>
     </div>
 
     <div class="template">
-      <h3>Problem 3 · Property near Imperial</h3>
+      <h3>Question 3 · Property near Imperial</h3>
       <p>Each business lasts forever: invest now, then c<sub>1</sub> in year 1 growing at g. <span class="parts">Covers 3 a.-b.</span></p>
       <div class="choices">
         {#each ps3 as t}<button type="button" disabled={!unlocked} on:click={() => loadTemplate(t)}><strong>{t.label}</strong><span>-{-t.flows[0]} · {t.flows[1]}</span><span>g {t.g}% · r {t.r}%</span></button>{/each}
