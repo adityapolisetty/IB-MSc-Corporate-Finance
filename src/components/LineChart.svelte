@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from 'svelte';
+  import { onMount, afterUpdate } from 'svelte';
   import { extent, scaleLinear, scaleLog, line, curveLinear, bisector } from 'd3';
   export let series = [];
   export let title = '';
@@ -24,8 +24,18 @@
   let container, width = 720, hidden = [], hover = null, pinned = false;
   let previousXAxis = null, previousYAxis = null, xScaleChange = null, yScaleChange = null;
   let height = 350, boxHeight = 0, capHeight = 0;
-  $: height = fill && boxHeight ? Math.max(180, boxHeight - capHeight - 6) : Math.round(heightScale * Math.max(350, Math.min(760, Math.round(width / 2.8))));
-  $: margin = { top: 30, right: 18, bottom: 61, left: width < 440 ? 62 : 72 };
+  $: height = fill && boxHeight ? Math.max(180, boxHeight - capHeight - 18) : Math.round(heightScale * Math.max(350, Math.min(760, Math.round(width / 2.8))));
+  $: margin = { top: 30, right: 18, bottom: 61, left: yLabelWidth ? yLabelWidth + 50 : (width < 440 ? 62 : 72) };
+  // The left margin follows the widest y tick label, so the axis title never touches the numbers.
+  let yLabelWidth = 0;
+  function measureYLabels() {
+    if (!container) return;
+    const widths = [...container.querySelectorAll('text.ytick')].map(t => t.getBBox().width);
+    const w = Math.ceil(Math.max(0, ...widths));
+    if (w !== yLabelWidth) yLabelWidth = w;
+  }
+  afterUpdate(measureYLabels);
+
   $: allPoints = series.flatMap(s => s.points).filter(p => Number.isFinite(p.x + p.y));
   $: xs = [...allPoints.map(p => p.x), ...references.filter(r => r.axis === 'x').map(r => r.value)];
   $: ys = [...allPoints.map(p => p.y), ...references.filter(r => r.axis === 'y').map(r => r.value), ...(includeZero ? [0] : [])];
@@ -99,6 +109,7 @@
   onMount(() => {
     const observer = new ResizeObserver(entries => { width = Math.max(240, Math.round(entries[0].contentRect.width)); boxHeight = Math.round(entries[0].contentRect.height); });
     observer.observe(container);
+    document.fonts.ready.then(measureYLabels);
     return () => observer.disconnect();
   });
 </script>
@@ -147,7 +158,7 @@
       <title>{title}</title><desc>{description || `${yLabel} against ${xLabel}.`}</desc>
       <defs><clipPath id={clipId}><rect x={margin.left} y={margin.top} width={width - margin.left - margin.right} height={height - margin.top - margin.bottom} /></clipPath></defs>
       {#each bands as band}<rect class="region" x={xScale(band.x0)} y={margin.top} width={Math.max(0, xScale(band.x1) - xScale(band.x0))} height={height - margin.bottom - margin.top} /><text class="region-label" x={(xScale(band.x0) + xScale(band.x1)) / 2} y={margin.top + 16} text-anchor="middle">{band.label}</text>{/each}
-      {#each yTicks as tick}{#if grid}<line class="grid" class:scale-grid={Boolean(yScaleChange) && tick === yTicks.at(-1)} x1={margin.left} x2={width - margin.right} y1={yScale(tick)} y2={yScale(tick)} />{/if}<text class="tick" class:scale-tick={Boolean(yScaleChange) && tick === yTicks.at(-1)} x={margin.left - 12} y={yScale(tick) + 4} text-anchor="end">{formatter(tick)}</text>{/each}
+      {#each yTicks as tick}{#if grid}<line class="grid" class:scale-grid={Boolean(yScaleChange) && tick === yTicks.at(-1)} x1={margin.left} x2={width - margin.right} y1={yScale(tick)} y2={yScale(tick)} />{/if}<text class="tick ytick" class:scale-tick={Boolean(yScaleChange) && tick === yTicks.at(-1)} x={margin.left - 12} y={yScale(tick) + 4} text-anchor="end">{formatter(tick)}</text>{/each}
       <line class="axis" class:axis-active={Boolean(yScaleChange)} x1={margin.left} x2={margin.left} y1={margin.top} y2={height - margin.bottom} />
       <line class="axis" class:axis-active={Boolean(xScaleChange)} x1={margin.left} x2={width - margin.right} y1={height - margin.bottom} y2={height - margin.bottom} />
       {#each xTicks as tick}<line class="axis" x1={xScale(tick)} x2={xScale(tick)} y1={height - margin.bottom} y2={height - margin.bottom + 5} /><text class="tick" class:scale-tick={Boolean(xScaleChange) && tick === xTicks.at(-1)} x={xScale(tick)} y={height - margin.bottom + 23} text-anchor={xScale(tick) > width - 35 ? 'end' : xScale(tick) < margin.left + 10 ? 'start' : 'middle'}>{formatter(tick)}</text>{/each}

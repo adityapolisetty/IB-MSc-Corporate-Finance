@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from 'svelte';
+  import { onMount, afterUpdate } from 'svelte';
   import { scaleBand, scaleLinear } from 'd3';
   // One bar per year, value printed on each bar; bars below zero hang from the zero line.
   export let title = '';
@@ -8,10 +8,21 @@
   export let color = 'series-1';
   export let negColor = null;
   export let format = v => v.toFixed(2);
+  export let tickFormat = format;
   export let fill = false;
   let container, width = 420, boxHeight = 0, capHeight = 0;
-  $: height = fill && boxHeight ? Math.max(140, boxHeight - capHeight - 6) : 300;
-  $: margin = { top: 28, right: 10, bottom: 46, left: width < 360 ? 66 : width > 560 ? 108 : 90 };
+  $: height = fill && boxHeight ? Math.max(140, boxHeight - capHeight - 14) : 300;
+  $: margin = { top: 28, right: 10, bottom: 46, left: yLabelWidth ? yLabelWidth + 48 : 90 };
+  // The left margin follows the widest y tick label, so the axis title never touches the numbers.
+  let yLabelWidth = 0;
+  function measureYLabels() {
+    if (!container) return;
+    const widths = [...container.querySelectorAll('text.ytick')].map(t => t.getBBox().width);
+    const w = Math.ceil(Math.max(0, ...widths));
+    if (w !== yLabelWidth) yLabelWidth = w;
+  }
+  afterUpdate(measureYLabels);
+
   $: values = bars.map(b => b.value);
   $: lo = Math.min(0, ...values);
   $: hi = Math.max(0, ...values);
@@ -22,6 +33,7 @@
   onMount(() => {
     const observer = new ResizeObserver(entries => { width = Math.max(240, Math.round(entries[0].contentRect.width)); boxHeight = Math.round(entries[0].contentRect.height); });
     observer.observe(container);
+    document.fonts.ready.then(measureYLabels);
     return () => observer.disconnect();
   });
 </script>
@@ -29,7 +41,7 @@
 <figure bind:this={container} class:fill aria-label={title}>
   <figcaption bind:clientHeight={capHeight}>{title}</figcaption>
   <svg viewBox={`0 0 ${width} ${height}`} width="100%" height={height} role="img" aria-label={title}>
-    {#each y.ticks(height < 240 ? 3 : 5) as tick}<line class="grid" x1={margin.left} x2={width - margin.right} y1={y(tick)} y2={y(tick)} /><text class="tick" x={margin.left - 10} y={y(tick) + 4} text-anchor="end">{format(tick)}</text>{/each}
+    {#each y.ticks(height < 240 ? 3 : 5) as tick}<line class="grid" x1={margin.left} x2={width - margin.right} y1={y(tick)} y2={y(tick)} /><text class="tick ytick" x={margin.left - 10} y={y(tick) + 4} text-anchor="end">{tickFormat(tick)}</text>{/each}
     {#each bars as b}
       <rect x={x(b.label)} width={x.bandwidth()} y={Math.min(y(0), y(b.value))} height={Math.abs(y(b.value) - y(0))} fill={`var(--${b.value < 0 && negColor ? negColor : color})`}><title>{b.label}: {format(b.value)}</title></rect>
       {#if showValues}<text class="value" x={x(b.label) + x.bandwidth() / 2} y={b.value >= 0 ? y(b.value) - 6 : y(b.value) + 15} text-anchor="middle">{format(b.value)}</text>{/if}
