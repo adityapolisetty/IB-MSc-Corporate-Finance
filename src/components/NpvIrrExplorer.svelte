@@ -5,10 +5,11 @@
   import { npv, findIrr, detectPattern, applyGrowth, discountFactors } from '../lib/irr.js';
 
   // ---- Setup form (mirrors the Streamlit "Project Setup" page) ----
-  let startYear = 0, minHurdle = 0, maxHurdle = 30, numYears = 4;
+  // Opens on a standard intro example: invest £1,000, receive £400 a year for 4 years (IRR 21.9%).
+  let startYear = 0, minHurdle = 0, maxHurdle = 30, numYears = 5;
   let usePerp = false, perpYear = 1;
   let useGrowth = false, growthYear = 1, growthRate = 0;
-  let flows = Array(50).fill(0);
+  let flows = [-1000, 400, 400, 400, 400, ...Array(45).fill(0)];
   let error = '';
   let view = 'input', project = null, hurdle = 15;
   let fit = false;
@@ -121,8 +122,8 @@
 {#if view === 'input'}
   <div class="setup">
   <section class="experiment form-card">
-    <h1 class="page-title">NPV and IRR</h1>
-    <p class="lede">Enter a project's cash flows, then move the hurdle rate to see how NPV responds - and when the IRR rule works, flips, or breaks.</p>
+    <h1 class="page-title">Capital budgeting visualisation</h1>
+    <p class="lede">Enter the project's horizon and cash flows.</p>
 
     <h2 class="experiment-title">Project details</h2>
     <div class="form-grid">
@@ -160,10 +161,10 @@
   </section>
 
   <aside class="templates" aria-label="Problem set 3 templates">
-    <h2>Problem Set 3 templates</h2>
+    <h2>Problem Set 3</h2>
     {#if !unlocked}
       <form class="lock" on:submit|preventDefault={unlock}>
-        <div><input id="ps3-pass" type="password" autocomplete="off" placeholder="Passcode" aria-label="Passcode to load the templates" bind:value={passInput} /><button type="submit">Unlock</button></div>
+        <div><input id="ps3-pass" type="password" autocomplete="off" placeholder="Passcode" aria-label="Passcode to load the problems" bind:value={passInput} /><button type="submit">Unlock</button></div>
         {#if passError}<span class="error" role="alert">{passError}</span>{/if}
       </form>
     {/if}
@@ -237,7 +238,7 @@
 {/if}
 
 <style>
-  .page-title { font-size: 1.9rem; font-weight: 600; line-height: 1.1; letter-spacing: -.02em; margin: 0 0 8px; }
+  .page-title { font-size: 1.5rem; font-weight: 600; line-height: 1.1; letter-spacing: -.02em; margin: 0 0 8px; }
   /* Setup page: the form on the left, this week's templates on the right. */
   .setup { display: grid; grid-template-columns: minmax(0, 1fr) clamp(380px, 32vw, 520px); gap: 32px; align-items: start; margin-top: 24px; }
   /* Landing form: same card, rule and button style as the results sidebar. */
