@@ -60,9 +60,9 @@
   figcaption { font-family: var(--font-heading); font-size: 1.15rem; line-height: 1.4; margin-bottom: 6px; }
   svg { display: block; overflow: visible; }
   rect { rx: 3px; }
-  .tick { font: var(--chart-tick-size, 12px) var(--font-body); fill: var(--muted); font-variant-numeric: tabular-nums; }
-  .value { font: 600 var(--chart-value-size, 12px) var(--font-mono); fill: var(--ink); font-variant-numeric: tabular-nums; }
-  .axis-title { font: var(--chart-title-size, 13px) var(--font-body); fill: var(--ink); }
+  .tick { font: var(--chart-tick-size, 13.2px) var(--font-body); fill: var(--muted); font-variant-numeric: tabular-nums; }
+  .value { font: 600 var(--chart-value-size, 13.2px) var(--font-mono); fill: var(--ink); font-variant-numeric: tabular-nums; }
+  .axis-title { font: var(--chart-title-size, 14.3px) var(--font-body); fill: var(--ink); }
   .grid { stroke: var(--rule); stroke-width: 1; shape-rendering: crispEdges; }
   .axis { stroke: var(--muted); stroke-width: 1; shape-rendering: crispEdges; }
 </style>

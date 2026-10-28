@@ -120,7 +120,7 @@
 
 {#if view === 'input'}
   <div class="setup">
-  <section class="experiment">
+  <section class="experiment form-card">
     <h1 class="page-title">NPV and IRR</h1>
     <p class="lede">Enter a project's cash flows, then move the hurdle rate to see how NPV responds - and when the IRR rule works, flips, or breaks.</p>
 
@@ -156,7 +156,7 @@
     </div>
 
     {#if error}<p class="error" role="alert">{error}</p>{/if}
-    <div class="button-row"><button class="button primary" type="button" on:click={analyze}>Analyse project</button></div>
+    <div class="analyse-row"><button class="analyse" type="button" on:click={analyze}>Analyse project →</button></div>
   </section>
 
   <aside class="templates" aria-label="Problem set 3 templates">
@@ -178,7 +178,7 @@
       <h3>Problem 3 · Property near Imperial</h3>
       <p>Each business lasts forever: invest now, then c<sub>1</sub> in year 1 growing at g. <span class="parts">Covers 3 a.-b.</span></p>
       <div class="choices">
-        {#each ps3 as t}<button type="button" disabled={!unlocked} on:click={() => loadTemplate(t)}><strong>{t.label}</strong><span>-{-t.flows[0]} · {t.flows[1]} · g {t.g}% · r {t.r}%</span></button>{/each}
+        {#each ps3 as t}<button type="button" disabled={!unlocked} on:click={() => loadTemplate(t)}><strong>{t.label}</strong><span>-{-t.flows[0]} · {t.flows[1]}</span><span>g {t.g}% · r {t.r}%</span></button>{/each}
       </div>
     </div>
   </aside>
@@ -207,7 +207,7 @@
           <tbody>{#each cfs as cf, i}<tr><td>Year {years[i]}{project.perpYear === years[i] ? ' (∞)' : ''}</td><td class:neg={cf < 0}>{money(cf)}</td></tr>{/each}</tbody>
         </table>
       </div>
-      {#if project.perpYear !== null}<p class="note">Perpetuity: the year {project.perpYear} cash flow continues forever{project.perpGrowth !== 0 ? `, growing at ${project.perpGrowth.toFixed(1)}% a year` : ''}. Its bar is the present value of the whole perpetuity, cash flow / (r - g), discounted to today.</p>{/if}
+      {#if project.perpYear !== null}<p class="note">∞ The year {project.perpYear} cash flow continues forever{project.perpGrowth !== 0 ? `, growing ${project.perpGrowth.toFixed(1)}% a year` : ''}. Its bar is the PV of the whole perpetuity.</p>{/if}
 
     </aside>
 
@@ -230,17 +230,22 @@
 
     <div class="bars">
       <div class="panel"><BarChart fill={fit} title={`Discount factors at ${hurdle.toFixed(1)}%`} yLabel="Discount factor" color="factor-bar" bars={factors.map((v, i) => ({ label: String(years[i]), value: v }))} format={v => v.toFixed(3)} tickFormat={v => String(Number(v.toFixed(2)))} /></div>
-      <div class="panel"><BarChart fill={fit} title={`Discounted cash flows · NPV ${money(npvNow)}`} yLabel="Discounted (£)" color="cash-bar" negColor="reject" bars={discounted.map((v, i) => ({ label: String(years[i]), value: v }))} format={v => money(v)} /></div>
+      <div class="panel"><BarChart fill={fit} title={`Discounted CFs · NPV ${money(npvNow)}`} yLabel="Discounted (£)" color="cash-bar" negColor="reject" bars={discounted.map((v, i) => ({ label: String(years[i]), value: v }))} format={v => money(v)} /></div>
     </div>
     </div>
   </section>
 {/if}
 
 <style>
-  .page-title { font-size: clamp(2rem, 3.6vw, 3rem); margin: 30px 0 14px; }
+  .page-title { font-size: 1.9rem; font-weight: 600; line-height: 1.1; letter-spacing: -.02em; margin: 0 0 8px; }
   /* Setup page: the form on the left, this week's templates on the right. */
-  .setup { display: grid; grid-template-columns: minmax(0, 1fr) clamp(380px, 32vw, 520px); gap: 40px; align-items: start; }
-  .templates { margin-top: 24px; display: flex; flex-direction: column; gap: 12px; padding: 16px 22px 20px; border: 1px solid var(--rule); border-top: 6px solid var(--accent); border-radius: 12px; }
+  .setup { display: grid; grid-template-columns: minmax(0, 1fr) clamp(380px, 32vw, 520px); gap: 32px; align-items: start; margin-top: 24px; }
+  /* Landing form: same card, rule and button style as the results sidebar. */
+  .form-card { margin: 0; padding: 22px 28px 26px; border: 1px solid var(--rule); border-top: 6px solid var(--accent); border-radius: 12px; background: var(--paper); }
+  .analyse-row { margin-top: 20px; }
+  .analyse { padding: 9px 22px; border: 1px solid var(--accent); border-radius: 8px; background: var(--accent); color: var(--paper); font-weight: 600; cursor: pointer; }
+  .analyse:hover { background: var(--paper); color: var(--accent); }
+  .templates { display: flex; flex-direction: column; gap: 12px; padding: 16px 22px 20px; border: 1px solid var(--rule); border-top: 6px solid var(--accent); border-radius: 12px; }
   .templates h2 { margin: 0; font-size: 1.4rem; font-weight: 600; }
   .lock { display: grid; gap: 4px; font-size: .85rem; }
   .lock div { display: flex; gap: 8px; }
@@ -260,19 +265,19 @@
   .choices strong { font-size: .95rem; font-weight: 600; }
   .choices span { font: .72rem var(--font-mono); opacity: .9; }
   @media (max-width: 1000px) { .setup { grid-template-columns: 1fr; gap: 0; } }
-  .lede { color: var(--muted); font-size: 1.1rem; line-height: 1.6; max-width: 70ch; }
-  .experiment-title { margin-top: 28px; }
+  .lede { margin: 0; color: var(--muted); font-size: .95rem; line-height: 1.55; max-width: 70ch; }
+  .experiment-title { margin: 22px 0 10px; padding-top: 14px; border-top: 1px solid var(--rule); font: 600 1.1rem var(--font-body); letter-spacing: 0; text-transform: none; color: var(--ink); }
   .form-grid, .flows { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 16px 24px; margin-bottom: 16px; align-items: end; }
   .flows { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
   label { display: grid; gap: 6px; font-size: .875rem; line-height: 1.4; }
   label.check { display: flex; align-items: center; gap: 10px; padding-bottom: 8px; }
-  input[type='number'] { border: 1px solid var(--rule); background: var(--paper); padding: 7px 10px; width: 100%; font-variant-numeric: tabular-nums; }
+  input[type='number'] { border: 1px solid var(--rule); border-radius: 8px; background: var(--paper); padding: 7px 10px; font-family: var(--font-mono); width: 100%; font-variant-numeric: tabular-nums; }
   input[type='number']:focus { border-color: var(--accent); outline: none; }
   input[type='checkbox'] { accent-color: var(--accent); width: 18px; height: 18px; }
   .note { background: var(--accent-soft); border-left: 2px solid var(--accent); padding: 10px 14px; font-size: .9rem; max-width: 80ch; }
   .error { color: var(--reject); font-weight: 600; }
   /* Analysis: a sticky sidebar with the controls, the charts in white panels beside it. */
-  .analysis { display: grid; grid-template-columns: clamp(365px, 24vw, 460px) minmax(0, 1fr); gap: 32px; align-items: start; margin-top: 28px; }
+  .analysis { display: grid; grid-template-columns: clamp(385px, 25vw, 470px) minmax(0, 1fr); gap: 32px; align-items: start; margin-top: 28px; }
   .side { position: sticky; top: 16px; display: flex; flex-direction: column; gap: 22px; padding: 24px 26px 28px; border: 1px solid var(--rule); border-top: 6px solid var(--accent); border-radius: 12px; background: var(--paper); }
   .back { padding: 0; border: none; background: none; color: var(--accent); font: .85rem var(--font-body); cursor: pointer; }
   .back:hover { text-decoration: underline; }
@@ -292,13 +297,13 @@
   td:first-child { text-align: left; color: var(--muted); }
   tr:last-child td { border-bottom: none; }
   td.neg { color: var(--reject); }
-  .side .note { margin: 0; font-size: .8rem; }
+  .side .note { margin: 0; padding: 8px 12px; font-size: .78rem; line-height: 1.45; }
   .charts { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
   .panel { border: 1px solid var(--rule); border-radius: 12px; padding: 18px 22px 12px; background: var(--paper); min-width: 0; }
   .bars { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
   /* Fit mode: sidebar and chart grid share the window height; a long cash-flow list scrolls inside the sidebar. */
   .analysis.fit { margin-top: 14px; }
-  .fit .side { position: static; height: 100%; overflow-y: auto; gap: 12px; padding: 14px 20px 16px; }
+  .fit .side { position: static; height: 100%; overflow-y: auto; gap: 10px; padding: 14px 20px 16px; }
   .fit .decision { padding: 10px 14px; }
   .fit td { padding: 4px 0; }
   .fit .charts { display: grid; grid-template-rows: minmax(0, 1.15fr) minmax(0, 1fr); gap: 14px; height: 100%; }

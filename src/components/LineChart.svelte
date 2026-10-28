@@ -211,8 +211,8 @@
   .scale-cue-icon.horizontal { width: 34px; height: 29px; }
   .chart-interaction { position: relative; }
   svg { display: block; overflow: visible; }
-  .tick { font: var(--chart-tick-size, 13px) var(--font-body); fill: var(--muted); font-variant-numeric: tabular-nums; }
-  .axis-title { font: var(--chart-title-size, 14px) var(--font-body); fill: var(--ink); }
+  .tick { font: var(--chart-tick-size, 14.3px) var(--font-body); fill: var(--muted); font-variant-numeric: tabular-nums; }
+  .axis-title { font: var(--chart-title-size, 15.4px) var(--font-body); fill: var(--ink); }
   .grid { stroke: var(--rule); stroke-width: 1; shape-rendering: crispEdges; }
   .axis { stroke: var(--muted); stroke-width: 1; shape-rendering: crispEdges; }
   .axis-active { stroke: var(--accent); stroke-width: 2.5; }
@@ -221,7 +221,7 @@
   .axis-marker rect { fill: var(--accent-soft-strong); stroke: var(--accent); stroke-width: 1.5; }
   .axis-marker path { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
   .reference { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 5; opacity: .6; }
-  .reference-label, .region-label { font: var(--chart-label-size, 13px) var(--font-body); fill: var(--muted); paint-order: stroke; stroke: var(--paper); stroke-width: 4px; }
+  .reference-label, .region-label { font: var(--chart-label-size, 14.3px) var(--font-body); fill: var(--muted); paint-order: stroke; stroke: var(--paper); stroke-width: 4px; }
   .region { fill: var(--accent-soft); opacity: .7; }
   .data-line { transition: d .22s ease; }
   .data-line.still { transition: none; }
