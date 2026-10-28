@@ -6,7 +6,7 @@
 
   // ---- Setup form (mirrors the Streamlit "Project Setup" page) ----
   // Opens on a standard intro example: invest £1,000, receive £400 a year for 4 years (IRR 21.9%).
-  let startYear = 0, minHurdle = 0, maxHurdle = 30, numYears = 5;
+  let startYear = 0, minHurdle = 0, maxHurdle = 100, numYears = 5;
   let usePerp = false, perpYear = 1;
   let useGrowth = false, growthYear = 1, growthRate = 0;
   let flows = [-1000, 400, 400, 400, 400, ...Array(45).fill(0)];
@@ -45,18 +45,18 @@
     error = '';
     const perp = usePerp ? { index: perpYear - startYear, g: perpGrowth / 100 } : null;
     project = { start: startYear, cashflows, perp, perpYear: usePerp ? perpYear : null, perpGrowth, minHurdle, maxHurdle, growth: useGrowth ? growthRate : 0 };
-    hurdle = (Math.max(minHurdle, usePerp ? perpGrowth + 0.5 : minHurdle) + maxHurdle) / 2;
+    hurdle = Math.max(10, usePerp ? perpGrowth + 0.5 : 0);
     view = 'analysis';
     window.scrollTo(0, 0);
   }
 
   // ---- This week's problem set: questions that use NPV and IRR (PS3, Problems 2 and 3) ----
-  const ps2 = { label: 'Load', flows: [0, 540, 540, 540, -1900], perp: false, g: 0, max: 30, r: 15 };
+  const ps2 = { label: 'Load', flows: [0, 540, 540, 540, -1900], perp: false, g: 0, r: 15 };
   const ps3 = [
-    { label: 'Book store', flows: [-300, 90], perp: true, g: 3, max: 60, r: 8 },
-    { label: 'Coffee shop', flows: [-200, 80], perp: true, g: 3, max: 60, r: 8 },
-    { label: 'Music store', flows: [-200, 110], perp: true, g: 0, max: 60, r: 8 },
-    { label: 'Gym', flows: [-200, 100], perp: true, g: 3, max: 60, r: 11 }
+    { label: 'Book store', flows: [-300, 90], perp: true, g: 3, r: 8 },
+    { label: 'Coffee shop', flows: [-200, 80], perp: true, g: 3, r: 8 },
+    { label: 'Music store', flows: [-200, 110], perp: true, g: 0, r: 8 },
+    { label: 'Gym', flows: [-200, 100], perp: true, g: 3, r: 11 }
   ];
 
   // Templates unlock with the tutor's passcode; only its SHA-256 is in the code. Remembered per browser.
@@ -74,7 +74,7 @@
 
   // Fill the form, let the reactive values settle, then analyse at the question's cost of capital.
   async function loadTemplate(t) {
-    startYear = 0; numYears = t.flows.length; minHurdle = 0; maxHurdle = t.max;
+    startYear = 0; numYears = t.flows.length;
     usePerp = t.perp; perpYear = t.flows.length - 1;
     useGrowth = t.g !== 0; growthYear = 1; growthRate = t.g;
     flows = [...t.flows, ...Array(50 - t.flows.length).fill(0)];
@@ -125,12 +125,17 @@
     <h1 class="page-title">Capital budgeting visualisation</h1>
     <p class="lede">Enter the project's horizon and cash flows.</p>
 
-    <h2 class="experiment-title">Project details</h2>
+    <h2 class="experiment-title">Project horizon</h2>
     <div class="form-grid">
       <label>Start year<input type="number" min="0" step="1" bind:value={startYear} /></label>
       <label>Number of years<input type="number" min="2" max="50" step="1" bind:value={numYears} /></label>
-      <label>Min hurdle rate (%)<input type="number" min="0" max="100" step="0.5" bind:value={minHurdle} /></label>
-      <label>Max hurdle rate (%)<input type="number" min="0" max="100" step="0.5" bind:value={maxHurdle} /></label>
+    </div>
+
+    <h2 class="experiment-title">Cash flows (£)</h2>
+    <div class="flows">
+      {#each Array(numFields) as _, i}
+        <label>Year {startYear + i}{usePerp && startYear + i === perpYear ? ' (perpetuity)' : ''}<input type="number" step="100" bind:value={flows[i]} /></label>
+      {/each}
     </div>
 
     <div class="form-grid">
@@ -148,13 +153,6 @@
       {/if}
     </div>
     {#if useGrowth && growthRate !== 0}<p class="note">A growth rate of {growthRate.toFixed(1)}% is applied to the year {growthYear} cash flow in every later year.</p>{/if}
-
-    <h2 class="experiment-title">Cash flows (£)</h2>
-    <div class="flows">
-      {#each Array(numFields) as _, i}
-        <label>Year {startYear + i}{usePerp && startYear + i === perpYear ? ' (perpetuity)' : ''}<input type="number" step="100" bind:value={flows[i]} /></label>
-      {/each}
-    </div>
 
     {#if error}<p class="error" role="alert">{error}</p>{/if}
     <div class="analyse-row"><button class="analyse" type="button" on:click={analyze}>Analyse project →</button></div>
@@ -271,10 +269,10 @@
   .form-grid, .flows { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 16px 24px; margin-bottom: 16px; align-items: end; }
   .flows { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
   label { display: grid; gap: 6px; font-size: .875rem; line-height: 1.4; }
-  label.check { display: flex; align-items: center; gap: 10px; padding-bottom: 8px; }
+  label.check { display: flex; align-items: center; gap: 10px; padding-bottom: 8px; grid-column: 1 / -1; }
   input[type='number'] { border: 1px solid var(--rule); border-radius: 8px; background: var(--paper); padding: 7px 10px; font-family: var(--font-mono); width: 100%; font-variant-numeric: tabular-nums; }
   input[type='number']:focus { border-color: var(--accent); outline: none; }
-  input[type='checkbox'] { accent-color: var(--accent); width: 18px; height: 18px; }
+  input[type='checkbox'] { accent-color: var(--accent); width: 18px; height: 18px; flex-shrink: 0; margin: 0; }
   .note { background: var(--accent-soft); border-left: 2px solid var(--accent); padding: 10px 14px; font-size: .9rem; max-width: 80ch; }
   .error { color: var(--reject); font-weight: 600; }
   /* Analysis: a sticky sidebar with the controls, the charts in white panels beside it. */
