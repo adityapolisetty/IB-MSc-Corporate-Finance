@@ -147,24 +147,20 @@
   </section>
 
   <aside class="templates" aria-label="Problem set 3 templates">
-    <span class="kicker">This week · Problem Set 3</span>
-    <h2>Templates</h2>
+    <h2>Problem Set 3 templates</h2>
 
     <div class="template">
       <h3>Problem 2 · Forgo maintenance</h3>
-      <p>Save £540k a year in years 1-3 by skipping maintenance, then pay £1.9m in year 4 (in £000).</p>
-      <p class="parts">For 2 a.-c.: the IRR, whether the IRR rule works, and for which costs of capital to forgo.</p>
+      <p>Save £540k a year in years 1-3, then pay £1.9m in year 4 (in £000). <span class="parts">Covers 2 a.-c.</span></p>
       <button type="button" on:click={() => loadTemplate(ps2)}>Load Problem 2</button>
     </div>
 
     <div class="template">
       <h3>Problem 3 · Property near Imperial</h3>
-      <p>Four businesses that last forever: pay the initial investment now, then c<sub>1</sub> in year 1 growing at g.</p>
-      <table>
-        <thead><tr><th></th><th>Invest</th><th>c<sub>1</sub></th><th>g</th><th>r</th></tr></thead>
-        <tbody>{#each ps3 as t}<tr><td><button type="button" on:click={() => loadTemplate(t)}>{t.label}</button></td><td>{-t.flows[0]}</td><td>{t.flows[1]}</td><td>{t.g}%</td><td>{t.r}%</td></tr>{/each}</tbody>
-      </table>
-      <p class="parts">For 3 a.-b.: compare the NPVs at each r with the IRRs.</p>
+      <p>Each business lasts forever: invest now, then c<sub>1</sub> in year 1 growing at g. <span class="parts">Covers 3 a.-b.</span></p>
+      <div class="choices">
+        {#each ps3 as t}<button type="button" on:click={() => loadTemplate(t)}><strong>{t.label}</strong><span>-{-t.flows[0]} · {t.flows[1]} · g {t.g}% · r {t.r}%</span></button>{/each}
+      </div>
     </div>
   </aside>
   </div>
@@ -224,19 +220,20 @@
 <style>
   .page-title { font-size: clamp(2rem, 3.6vw, 3rem); margin: 30px 0 14px; }
   /* Setup page: the form on the left, this week's templates on the right. */
-  .setup { display: grid; grid-template-columns: minmax(0, 1fr) clamp(340px, 28vw, 460px); gap: 48px; align-items: start; }
-  .templates { margin-top: 30px; display: flex; flex-direction: column; gap: 16px; padding: 22px 24px; border: 1px solid var(--rule); border-top: 6px solid var(--accent); border-radius: 12px; }
-  .templates h2 { margin: 0; font-size: 1.6rem; font-weight: 600; }
-  .templates .kicker { font: .8rem var(--font-mono); color: var(--accent); }
-  .template { display: flex; flex-direction: column; gap: 8px; padding-top: 14px; border-top: 1px solid var(--rule); }
+  .setup { display: grid; grid-template-columns: minmax(0, 1fr) clamp(380px, 32vw, 520px); gap: 40px; align-items: start; }
+  .templates { margin-top: 24px; display: flex; flex-direction: column; gap: 12px; padding: 16px 22px 20px; border: 1px solid var(--rule); border-top: 6px solid var(--accent); border-radius: 12px; }
+  .templates h2 { margin: 0; font-size: 1.4rem; font-weight: 600; }
+  .template { display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: 1px solid var(--rule); }
   .template h3 { margin: 0; font-size: 1.1rem; font-weight: 600; }
-  .template p { margin: 0; font-size: .9rem; line-height: 1.5; }
+  .template p { margin: 0; font-size: .85rem; line-height: 1.45; }
   .template .parts { color: var(--muted); }
-  .template > button { align-self: flex-start; padding: 7px 16px; border: 1px solid var(--accent); border-radius: 8px; background: var(--accent); color: var(--paper); cursor: pointer; }
+  .template > button { align-self: flex-start; padding: 5px 16px; border: 1px solid var(--accent); border-radius: 8px; background: var(--accent); color: var(--paper); cursor: pointer; }
   .template > button:hover { background: var(--paper); color: var(--accent); }
-  .template table { font: .85rem var(--font-mono); }
-  .template th { padding: 4px 0; border-bottom: 1px solid var(--rule); text-align: right; font-weight: 400; color: var(--muted); }
-  .template td button { padding: 0; border: none; background: none; color: var(--accent); font: 600 .9rem var(--font-body); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+  .choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .choices button { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 8px 12px; border: 1px solid var(--accent); border-radius: 8px; background: var(--accent); color: var(--paper); cursor: pointer; text-align: left; }
+  .choices button:hover { background: var(--paper); color: var(--accent); }
+  .choices strong { font-size: .95rem; font-weight: 600; }
+  .choices span { font: .72rem var(--font-mono); opacity: .9; }
   @media (max-width: 1000px) { .setup { grid-template-columns: 1fr; gap: 0; } }
   .lede { color: var(--muted); font-size: 1.1rem; line-height: 1.6; max-width: 70ch; }
   .experiment-title { margin-top: 28px; }
