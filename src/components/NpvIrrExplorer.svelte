@@ -33,7 +33,7 @@
   }
 
   // ---- Analysis (mirrors the Streamlit visualisation page) ----
-  const money = v => `£${v < 0 ? '-' : ''}${Math.abs(v).toLocaleString('en-GB', { maximumFractionDigits: 0 })}`;
+  const money = v => `${v < 0 ? '-' : ''}£${Math.abs(v).toLocaleString('en-GB', { maximumFractionDigits: 0 })}`;
   $: cfs = project ? project.cashflows : [];
   $: start = project ? project.start : 0;
   $: pattern = project ? detectPattern(cfs) : 'mixed';
@@ -53,17 +53,18 @@
   $: curve = Array.from({ length: 201 }, (_, i) => { const x = rateMin + (rateMax - rateMin) * i / 200; return { x, y: npv(x / 100, cfs, start, perp) }; });
   $: title = pattern === 'investment' ? 'Investment pattern' : pattern === 'financing' ? 'Financing pattern' : 'Mixed pattern (multiple IRRs possible)';
   $: decision = decide(pattern, irr, r, npvNow);
+  $: rising = project ? npv(r + 0.005, cfs, start, perp) > npvNow : false;
 
   // Investment: accept if hurdle < IRR. Financing: the rule flips, accept if hurdle > IRR. Mixed: use NPV.
   function decide(pattern, irr, r, value) {
     const tail = `NPV = ${money(value)}`;
-    const h = `Hurdle rate (${(r * 100).toFixed(1)}%)`;
-    if (pattern === 'mixed') return { tone: 'neutral', text: `⚠ Mixed pattern | ${irr === null ? 'No valid IRR' : `IRR = ${(irr * 100).toFixed(2)}%`} | Use NPV for the decision: ${tail}` };
-    if (irr === null) return { tone: 'neutral', text: `No valid IRR | ${tail}` };
-    const i = `IRR (${(irr * 100).toFixed(2)}%)`;
+    const h = `Hurdle rate ${(r * 100).toFixed(1)}%`;
+    if (pattern === 'mixed') return { tone: 'neutral', head: '⚠ Mixed pattern', lines: [irr === null ? 'No valid IRR' : `IRR = ${(irr * 100).toFixed(2)}%`, `Use NPV: ${tail}`] };
+    if (irr === null) return { tone: 'neutral', head: 'No valid IRR', lines: [tail] };
+    const i = `IRR ${(irr * 100).toFixed(2)}%`;
     const accept = pattern === 'investment' ? r < irr : r > irr;
     const sign = r < irr ? '<' : '>';
-    return { tone: accept ? 'accept' : 'reject', text: `${accept ? '✓ ACCEPT' : '✗ REJECT'} | ${h} ${sign} ${i} | ${tail}` };
+    return { tone: accept ? 'accept' : 'reject', head: accept ? '✓ Accept' : '✗ Reject', lines: [`${h} ${sign} ${i}`, tail] };
   }
 </script>
 
@@ -107,33 +108,36 @@
     <div class="button-row"><button class="button primary" type="button" on:click={analyze}>Analyse project</button></div>
   </section>
 {:else}
-  <section class="experiment">
-    <div class="analysis-head">
-      <button class="button" type="button" on:click={() => (view = 'input')}>← New project</button>
-      <h1 class="page-title">{title}</h1>
-    </div>
-    {#if project.perpYear !== null}<p class="note">Perpetuity: the year {project.perpYear} cash flow continues forever{project.perpGrowth !== 0 ? `, growing at ${project.perpGrowth.toFixed(1)}% a year` : ''}. Its bar below is the present value of the whole perpetuity, cash flow / (r - g), discounted to today.</p>{/if}
+  <section class="analysis">
+    <aside class="side">
+      <div>
+        <span class="kicker">NPV / IRR</span>
+        <h1 class="side-title">{title}</h1>
+      </div>
 
-    <label class="slider">
-      <span class="control-heading"><span>Hurdle rate</span><output>{hurdle.toFixed(1)}%</output></span>
-      <input type="range" min={sliderMin} max={project.maxHurdle} step="0.5" bind:value={hurdle} />
-    </label>
+      <label class="slider">
+        <span class="control-heading"><span>Hurdle rate</span><output>{hurdle.toFixed(1)}%</output></span>
+        <input type="range" min={sliderMin} max={project.maxHurdle} step="0.5" bind:value={hurdle} />
+      </label>
 
-    <p class={`decision ${decision.tone}`}>{decision.text}</p>
+      <div class={`decision ${decision.tone}`} aria-live="polite">
+        <strong>{decision.head}</strong>
+        {#each decision.lines as line}<span>{line}</span>{/each}
+      </div>
 
-    <div class="panels">
       <div class="cf-table">
-        <h2 class="experiment-title">Cash flows</h2>
+        <span class="side-label">Cash flows</span>
         <table>
-          <thead><tr><th>Year</th><th>Cash flow</th></tr></thead>
-          <tbody>{#each cfs as cf, i}<tr><td>{years[i]}{project.perpYear === years[i] ? ' (∞)' : ''}</td><td>{money(cf)}</td></tr>{/each}</tbody>
+          <tbody>{#each cfs as cf, i}<tr><td>Year {years[i]}{project.perpYear === years[i] ? ' (∞)' : ''}</td><td class:neg={cf < 0}>{money(cf)}</td></tr>{/each}</tbody>
         </table>
       </div>
-      <BarChart title={`Discount factors (at ${hurdle.toFixed(1)}%)`} yLabel="Discount factor" color="factor-bar" bars={factors.map((v, i) => ({ label: String(years[i]), value: v }))} format={v => v.toFixed(3)} />
-      <BarChart title={`Discounted cash flows - NPV = ${money(npvNow)}`} yLabel="Discounted cash flow (£)" color="cash-bar" bars={discounted.map((v, i) => ({ label: String(years[i]), value: v }))} format={v => money(v)} />
-    </div>
+      {#if project.perpYear !== null}<p class="note">Perpetuity: the year {project.perpYear} cash flow continues forever{project.perpGrowth !== 0 ? `, growing at ${project.perpGrowth.toFixed(1)}% a year` : ''}. Its bar is the present value of the whole perpetuity, cash flow / (r - g), discounted to today.</p>{/if}
 
-    <div class="npv-curve">
+      <button class="new-project" type="button" on:click={() => (view = 'input')}>← New project</button>
+    </aside>
+
+    <div class="charts">
+    <div class="panel npv-curve">
       <LineChart
         title="NPV against the hurdle rate"
         xLabel="Hurdle rate (%)"
@@ -142,10 +146,16 @@
         scaleCues={false}
         animate={false}
         xDomain={[rateMin, rateMax]}
-        series={[{ id: 'npv', label: 'NPV', color: pattern === 'investment' ? 'npv-line' : 'reject', points: curve }]}
+        series={[{ id: 'npv', label: 'NPV', color: 'npv-line', points: curve }]}
         references={[{ axis: 'y', value: 0, label: '' }, ...(irr !== null ? [{ axis: 'x', value: irr * 100, label: `IRR = ${(irr * 100).toFixed(2)}%` }] : [])]}
-        markers={[{ x: hurdle, y: npvNow, color: npvNow > 0 ? 'accept' : 'reject', label: `${hurdle.toFixed(1)}%` }]}
+        markers={[{ x: hurdle, y: npvNow, color: npvNow > 0 ? 'accept' : 'reject', label: money(npvNow), anchor: rising ? 'end' : 'start' }]}
       />
+    </div>
+
+    <div class="bars">
+      <div class="panel"><BarChart title={`Discount factors at ${hurdle.toFixed(1)}%`} yLabel="Discount factor" color="factor-bar" bars={factors.map((v, i) => ({ label: String(years[i]), value: v }))} format={v => v.toFixed(3)} /></div>
+      <div class="panel"><BarChart title={`Discounted cash flows · NPV ${money(npvNow)}`} yLabel="Discounted cash flow (£)" color="cash-bar" negColor="reject" bars={discounted.map((v, i) => ({ label: String(years[i]), value: v }))} format={v => money(v)} /></div>
+    </div>
     </div>
   </section>
 {/if}
@@ -163,22 +173,32 @@
   input[type='checkbox'] { accent-color: var(--accent); width: 18px; height: 18px; }
   .note { background: var(--accent-soft); border-left: 2px solid var(--accent); padding: 10px 14px; font-size: .9rem; max-width: 80ch; }
   .error { color: var(--reject); font-weight: 600; }
-  .analysis-head { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
-  .analysis-head .page-title { margin: 24px 0 16px; }
-  .slider { max-width: 640px; margin: 8px 0 4px; }
-  .control-heading { display: flex; justify-content: space-between; }
-  .control-heading output { color: var(--accent); font-variant-numeric: tabular-nums; font-weight: 600; }
-  .decision { font-size: 1.05rem; font-weight: 600; padding: 10px 14px; border-left: 3px solid currentColor; background: var(--accent-soft); margin: 14px 0 26px; }
+  /* Analysis: a sticky sidebar with the controls, the charts in white panels beside it. */
+  .analysis { display: grid; grid-template-columns: 350px minmax(0, 1fr); gap: 32px; align-items: start; margin-top: 28px; }
+  .side { position: sticky; top: 16px; display: flex; flex-direction: column; gap: 22px; padding: 24px 26px 28px; border: 1px solid var(--rule); border-top: 6px solid var(--accent); border-radius: 12px; background: var(--paper); }
+  .kicker { font: .75rem var(--font-mono); color: var(--accent); }
+  .side-title { margin: 2px 0 0; font-size: 1.9rem; font-weight: 600; line-height: 1.1; letter-spacing: -.02em; }
+  .side-label { font-size: .85rem; color: var(--muted); }
+  .control-heading { display: flex; justify-content: space-between; color: var(--muted); }
+  .control-heading output { color: var(--accent); font: 600 1.05rem var(--font-mono); }
+  input[type='range'] { accent-color: var(--accent); width: 100%; margin: 0; }
+  .decision { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border: 1px solid var(--rule); border-left: 5px solid currentColor; border-radius: 8px; }
+  .decision strong { font-size: 1.35rem; font-weight: 700; }
+  .decision span { font: .75rem/1.5 var(--font-mono); color: var(--muted); }
   .decision.accept { color: var(--accept); }
   .decision.reject { color: var(--reject); }
   .decision.neutral { color: var(--muted); }
-  .panels { display: grid; grid-template-columns: minmax(150px, .5fr) 1fr 1fr; gap: 32px; align-items: start; }
-  .cf-table .experiment-title { margin-top: 0; }
-  table { border-collapse: collapse; width: 100%; font-size: .9rem; font-variant-numeric: tabular-nums; }
-  th, td { padding: 6px 10px; border-bottom: 1px solid var(--rule); text-align: right; }
-  th:first-child, td:first-child { text-align: left; }
-  th { background: var(--accent-soft); font-weight: 600; }
-  .npv-curve { margin-top: 36px; }
-  @media (max-width: 1000px) { .panels { grid-template-columns: 1fr 1fr; } .cf-table { grid-column: 1 / -1; max-width: 360px; } }
-  @media (max-width: 640px) { .panels { grid-template-columns: 1fr; } }
+  table { border-collapse: collapse; width: 100%; font: .85rem var(--font-mono); }
+  td { padding: 7px 0; border-bottom: 1px solid var(--rule); text-align: right; }
+  td:first-child { text-align: left; color: var(--muted); }
+  tr:last-child td { border-bottom: none; }
+  td.neg { color: var(--reject); }
+  .side .note { margin: 0; font-size: .8rem; }
+  .new-project { min-height: 44px; border: 1px solid var(--accent); border-radius: 8px; background: var(--paper); color: var(--accent); cursor: pointer; }
+  .new-project:hover { background: var(--accent-soft); }
+  .charts { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+  .panel { border: 1px solid var(--rule); border-radius: 12px; padding: 18px 22px 12px; background: var(--paper); min-width: 0; }
+  .bars { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+  @media (max-width: 1000px) { .analysis { grid-template-columns: 1fr; } .side { position: static; } }
+  @media (max-width: 640px) { .bars { grid-template-columns: 1fr; } }
 </style>

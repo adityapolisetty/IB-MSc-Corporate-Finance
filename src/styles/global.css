@@ -1,27 +1,25 @@
-@import '@fontsource/source-sans-pro/400.css';
-@import '@fontsource/source-sans-pro/400-italic.css';
-@import '@fontsource/source-sans-pro/600.css';
-@import '@fontsource/source-sans-pro/700.css';
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
 
 /* The entire visual identity lives here. Charts use these same tokens. */
 :root {
   --paper: #ffffff;
   --surface: var(--accent-soft);
-  --ink: #262824;
-  --muted: #60635b;
-  --rule: #d9dbef;
-  --accent: #0000cd;
-  --accent-soft: #eeeeff;
-  --accent-soft-strong: #dcdcff;
+  --ink: #10142b;
+  --muted: #4a4f68;
+  --rule: #e3e6f0;
+  --accent: #061d95;
+  --accent-soft: #f2f4fb;
+  --accent-soft-strong: #dfe3f6;
   --series-1: var(--ink);
   --series-2: #426e7a;
   --series-3: #657345;
-  --npv-line: #141450;
-  --accept: #006400;
-  --reject: #c00000;
-  --factor-bar: #003366;
-  --cash-bar: #8b0000;
-  --font-body: 'Source Sans Pro', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --npv-line: #061d95;
+  --accept: #061d95;
+  --reject: #c0392b;
+  --factor-bar: #c9d1f2;
+  --cash-bar: #061d95;
+  --font-body: 'Space Grotesk', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', Consolas, monospace;
   --font-heading: var(--font-body);
 }
 * { box-sizing: border-box; }
@@ -46,7 +44,7 @@ p { margin-bottom: 1.1em; }
 .header-inner { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 24px 32px; }.wordmark { display: inline-flex; text-decoration: none; }
 .site-logo { display: block; width: 200px; height: auto; flex-shrink: 0; }
 .brand { display: flex; align-items: center; gap: 16px; }
-.course-title { padding-left: 16px; border-left: 1px solid var(--rule); font-family: 'Source Sans Pro', sans-serif; font-size: 1rem; font-weight: 600; color: var(--ink); line-height: 1.2; white-space: nowrap; }
+.course-title { padding-left: 16px; border-left: 1px solid var(--rule); font-family: var(--font-body); font-size: 1rem; font-weight: 600; color: var(--ink); line-height: 1.2; white-space: nowrap; }
 .skip-link { position: absolute; top: -100px; left: 24px; background: var(--accent); color: var(--paper); padding: 12px 18px; z-index: 100; }
 .skip-link:focus { top: 10px; }
 .home { padding: 70px 32px 60px; }
@@ -168,7 +166,7 @@ select { background: var(--accent-soft); color: var(--ink); border: 1px solid va
   .segmented button { text-align: left; }
   .segmented button + button { border-left: 0; border-top: 1px solid var(--paper); }
   .home-intro h1 { font-size: clamp(2.5rem, 13vw, 3rem); }
-  .site-footer { display: block; }
+  .site-footer { flex-direction: column; gap: 4px; }
 }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { transition: none !important; animation: none !important; } }
 @media print {
