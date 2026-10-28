@@ -1,4 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+@import '@fontsource/source-sans-pro/400.css';
+@import '@fontsource/source-sans-pro/400-italic.css';
+@import '@fontsource/source-sans-pro/600.css';
+@import '@fontsource/source-sans-pro/700.css';
 
 /* The entire visual identity lives here. Charts use these same tokens. */
 :root {
@@ -18,13 +21,13 @@
   --reject: #c0392b;
   --factor-bar: #c9d1f2;
   --cash-bar: #061d95;
-  --font-body: 'Space Grotesk', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-  --font-mono: 'JetBrains Mono', Consolas, monospace;
+  --font-body: 'Source Sans Pro', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: var(--font-body);
   --font-heading: var(--font-body);
 }
 * { box-sizing: border-box; }
 html { font-size: 120%; scroll-behavior: smooth; scroll-padding-top: 110px; }
-body { margin: 0; color: var(--ink); background: var(--paper); font: 1.0625rem/1.75 var(--font-body); -webkit-font-smoothing: antialiased; }
+body { margin: 0; color: var(--ink); background: var(--paper); font: 1.0625rem/1.75 var(--font-body); font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; }
 ::selection { background: var(--accent-soft); }
 a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 4px; }
 a:hover { color: var(--accent); }

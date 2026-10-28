@@ -263,7 +263,7 @@
   .choices button { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 8px 12px; border: 1px solid var(--accent); border-radius: 8px; background: var(--accent); color: var(--paper); cursor: pointer; text-align: left; }
   .choices button:hover { background: var(--paper); color: var(--accent); }
   .choices strong { font-size: .95rem; font-weight: 600; }
-  .choices span { font: .72rem var(--font-mono); opacity: .9; }
+  .choices span { font: .8rem var(--font-mono); opacity: .9; }
   @media (max-width: 1000px) { .setup { grid-template-columns: 1fr; gap: 0; } }
   .lede { margin: 0; color: var(--muted); font-size: .95rem; line-height: 1.55; max-width: 70ch; }
   .experiment-title { margin: 22px 0 10px; padding-top: 14px; border-top: 1px solid var(--rule); font: 600 1.1rem var(--font-body); letter-spacing: 0; text-transform: none; color: var(--ink); }
@@ -288,7 +288,7 @@
   input[type='range'] { accent-color: var(--accent); width: 100%; margin: 0; }
   .decision { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border: 1px solid var(--rule); border-left: 5px solid currentColor; border-radius: 8px; }
   .decision strong { font-size: 1.35rem; font-weight: 700; }
-  .decision span { font: .75rem/1.5 var(--font-mono); color: var(--muted); }
+  .decision span { font: .85rem/1.5 var(--font-mono); color: var(--muted); }
   .decision.accept { color: var(--accept); }
   .decision.reject { color: var(--reject); }
   .decision.neutral { color: var(--muted); }
