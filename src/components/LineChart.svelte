@@ -54,6 +54,10 @@
   $: hoverX = hover === null ? null : xScale(hover);
   $: clipId = `plot-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
   $: if (series) { hover = null; pinned = false; }
+  // Tags drawn as outlined pills sized to their label; the IRR tag sits in a band above the x axis.
+  const pillWidth = label => Math.round(label.length * 8.6 + 24);
+  $: clampX = (x, w) => Math.max(margin.left + 4, Math.min(width - margin.right - w, x));
+  $: irrPillY = yScale(0) > margin.top + (height - margin.bottom - margin.top) * .65 ? margin.top + 20 : height - margin.bottom - 24;
   const formatter = v => Number.isInteger(v) ? String(v) : Math.abs(v) < .01 && v !== 0 ? v.toExponential(1) : Number(v.toFixed(2)).toString();
   function trackAxis(axis, domain, label, type) {
     const [min, max] = type === 'log' ? domain.map(Math.log) : domain;
@@ -184,10 +188,31 @@
       <text class="axis-title" transform={`translate(16 ${(margin.top + height - margin.bottom) / 2}) rotate(-90)`} text-anchor="middle">{yLabel}</text>
       {#each references as r}
         {#if r.axis === 'y'}<line class="reference" x1={margin.left} x2={width - margin.right} y1={yScale(r.value)} y2={yScale(r.value)} /><text class="reference-label" x={width - margin.right - 5} y={yScale(r.value) - 8} text-anchor="end">{r.label}</text>
+        {:else if r.pill}
+          {@const X = xScale(r.value)}
+          {@const w = pillWidth(r.label)}
+          {@const px = clampX(r.anchor === 'end' ? X - 14 - w : X + 14, w)}
+          <line class="reference-x" x1={X} x2={X} y1={margin.top} y2={height - margin.bottom} />
+          <line class="pill-stem" x1={X} x2={r.anchor === 'end' ? px + w : px} y1={irrPillY} y2={irrPillY} />
+          <circle class="pill-dot" cx={X} cy={irrPillY} r="3.5" />
+          <rect class="pill" x={px} y={irrPillY - 15} width={w} height="30" rx="15" />
+          <text class="pill-text" x={px + w / 2} y={irrPillY + 6} text-anchor="middle">{r.label}</text>
         {:else}<line class="reference" x1={xScale(r.value)} x2={xScale(r.value)} y1={margin.top} y2={height - margin.bottom} /><text class="reference-label" x={xScale(r.value) + 6} y={margin.top + 15}>{r.label}</text>{/if}
       {/each}
       <g clip-path={`url(#${clipId})`}>{#each visibleSeries as s}<path class="data-line" class:still={!animate} d={drawLine(s.points)} fill="none" stroke={`var(--${s.color || 'series-1'})`} stroke-width={s.width || 2.5} stroke-dasharray={s.dasharray || (s.dash ? '6 5' : undefined)} />{/each}</g>
-      {#each markers as m}<circle cx={xScale(m.x)} cy={yScale(m.y)} r="4.5" fill={`var(--${m.color || 'series-1'})`} stroke="var(--paper)" stroke-width="2" />{#if m.label}<text class="reference-label" x={xScale(m.x) + (m.anchor === 'end' ? -12 : 12)} y={yScale(m.y) - 12} text-anchor={m.anchor || 'start'}>{m.label}</text>{/if}{/each}
+      {#each markers as m}{#if m.pill}
+        {@const X = xScale(m.x)}
+        {@const Y = yScale(m.y)}
+        {@const w = pillWidth(m.label)}
+        {@const below = Y + 70 < height - margin.bottom - 42 || Y - 70 < margin.top}
+        {@const top = below ? Y + 40 : irrPillY < Y ? Math.max(Y - 70, irrPillY + 25) : Y - 70}
+        {@const side = below === (m.anchor === 'end') ? 'end' : 'start'}
+        {@const px = clampX(side === 'end' ? X + 12 - w : X - 12, w)}
+        <line class="marker-stem" x1={X} x2={X} y1={below ? Y + 8 : Y - 8} y2={below ? top : top + 30} style={`stroke: var(--${m.color})`} />
+        <rect class="pill" x={px} y={top} width={w} height="30" rx="15" style={`stroke: var(--${m.color})`} />
+        <text class="pill-text" x={px + w / 2} y={top + 21} text-anchor="middle" style={`fill: var(--${m.color})`}>{m.label}</text>
+        <circle cx={X} cy={Y} r="7" fill="var(--paper)" stroke={`var(--${m.color})`} stroke-width="3.5" />
+      {:else}<circle cx={xScale(m.x)} cy={yScale(m.y)} r="4.5" fill={`var(--${m.color || 'series-1'})`} stroke="var(--paper)" stroke-width="2" />{#if m.label}<text class="reference-label" x={xScale(m.x) + (m.anchor === 'end' ? -12 : 12)} y={yScale(m.y) - 12} text-anchor={m.anchor || 'start'}>{m.label}</text>{/if}{/if}{/each}
       {#if hover !== null}<line class="hover-guide" x1={hoverX} x2={hoverX} y1={margin.top} y2={height - margin.bottom} />{#each hoverRows as row}<circle cx={hoverX} cy={yScale(row.value)} r="4.5" fill={`var(--${row.color || 'series-1'})`} stroke="var(--paper)" stroke-width="2" />{/each}{/if}
       {#if interactive}<rect class="pointer-area" x={margin.left} y={margin.top} width={width - margin.left - margin.right} height={height - margin.top - margin.bottom} fill="transparent" aria-hidden="true" on:pointermove={pointer} on:pointerleave={() => { if (!pinned) hover = null; }} on:pointerdown={event => { pointer(event); pinned = !pinned; }} />{/if}
     </svg>
@@ -223,6 +248,12 @@
   .reference { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 5; opacity: .6; }
   .reference-label, .region-label { font: var(--chart-label-size, 14.3px) var(--font-body); fill: var(--muted); paint-order: stroke; stroke: var(--paper); stroke-width: 4px; }
   .region { fill: var(--accent-soft); opacity: .7; }
+  .reference-x { stroke: var(--ink); stroke-width: 2; stroke-dasharray: 5 4; }
+  .pill { fill: var(--paper); stroke: var(--ink); stroke-width: 2.5; }
+  .pill-text { font: 700 var(--chart-label-size, 16px) var(--font-body); fill: var(--ink); font-variant-numeric: tabular-nums; }
+  .pill-stem { stroke: var(--ink); stroke-width: 2; }
+  .pill-dot { fill: var(--ink); }
+  .marker-stem { stroke-width: 2; }
   .data-line { transition: d .22s ease; }
   .data-line.still { transition: none; }
   .hover-guide { stroke: var(--muted); stroke-width: 1; opacity: .5; }
