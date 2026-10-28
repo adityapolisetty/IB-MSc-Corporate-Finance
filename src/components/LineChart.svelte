@@ -20,10 +20,11 @@
   export let scaleCues = true;
   export let heightScale = 1;
   export let grid = true;
+  export let fill = false;
   let container, width = 720, hidden = [], hover = null, pinned = false;
   let previousXAxis = null, previousYAxis = null, xScaleChange = null, yScaleChange = null;
-  let height = 350;
-  $: height = Math.round(heightScale * Math.max(350, Math.min(760, Math.round(width / 2.8))));
+  let height = 350, boxHeight = 0, capHeight = 0;
+  $: height = fill && boxHeight ? Math.max(180, boxHeight - capHeight - 6) : Math.round(heightScale * Math.max(350, Math.min(760, Math.round(width / 2.8))));
   $: margin = { top: 30, right: 18, bottom: 61, left: width < 440 ? 62 : 72 };
   $: allPoints = series.flatMap(s => s.points).filter(p => Number.isFinite(p.x + p.y));
   $: xs = [...allPoints.map(p => p.x), ...references.filter(r => r.axis === 'x').map(r => r.value)];
@@ -36,7 +37,7 @@
   $: trackAxis('x', xScale.domain(), xLabel, xType);
   $: trackAxis('y', yScale.domain(), yLabel, 'linear');
   $: xTicks = chartTicks(xScale, xType, width);
-  $: yTicks = yScale.ticks(5);
+  $: yTicks = yScale.ticks(height < 300 ? 4 : 5);
   $: drawLine = line().x(p => xScale(p.x)).y(p => yScale(p.y)).curve(curveLinear);
   $: visibleSeries = series.filter(s => !hidden.includes(s.id));
   $: hoverRows = hover === null ? [] : visibleSeries.map(s => ({ ...s, value: interpolate(s.points, hover) })).filter(s => s.value !== null);
@@ -96,14 +97,14 @@
   }
   function toggle(id) { hidden = hidden.includes(id) ? hidden.filter(x => x !== id) : [...hidden, id]; }
   onMount(() => {
-    const observer = new ResizeObserver(entries => { width = Math.max(240, Math.round(entries[0].contentRect.width)); });
+    const observer = new ResizeObserver(entries => { width = Math.max(240, Math.round(entries[0].contentRect.width)); boxHeight = Math.round(entries[0].contentRect.height); });
     observer.observe(container);
     return () => observer.disconnect();
   });
 </script>
 
-<figure class="line-chart" bind:this={container} aria-label={title}>
-  <figcaption>{title}</figcaption>
+<figure class="line-chart" class:fill bind:this={container} aria-label={title}>
+  <figcaption bind:clientHeight={capHeight}>{title}</figcaption>
   {#if showLegend}<div class="legend" aria-label="Chart series">{#each series as s}<button type="button" aria-pressed={!hidden.includes(s.id)} on:click={() => toggle(s.id)}><span class:dash={s.dash} style={`--series-color: var(--${s.color || 'series-1'})`}></span>{s.label}</button>{/each}</div>{/if}
   {#if xScaleChange || yScaleChange}
     <div class="scale-cues" role="status" aria-live="polite">
@@ -185,6 +186,7 @@
 
 <style>
   figure { margin: 0; width: 100%; }
+  figure.fill { height: 100%; overflow: hidden; }
   figcaption { font-family: var(--font-heading); font-size: 1.35rem; line-height: 1.4; margin-bottom: 10px; }
   .legend { display: flex; gap: 10px 23px; flex-wrap: wrap; margin-bottom: 7px; }
   .legend button { background: var(--ink); border: 1px solid var(--ink); padding: 4px 9px; font-size: .8125rem; display: inline-flex; align-items: center; gap: 8px; color: var(--paper); }
@@ -208,7 +210,7 @@
   .axis-marker rect { fill: var(--accent-soft-strong); stroke: var(--accent); stroke-width: 1.5; }
   .axis-marker path { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
   .reference { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 5; opacity: .6; }
-  .reference-label, .region-label { font: 13px var(--font-body); fill: var(--muted); paint-order: stroke; stroke: var(--paper); stroke-width: 4px; }
+  .reference-label, .region-label { font: var(--chart-label-size, 13px) var(--font-body); fill: var(--muted); paint-order: stroke; stroke: var(--paper); stroke-width: 4px; }
   .region { fill: var(--accent-soft); opacity: .7; }
   .data-line { transition: d .22s ease; }
   .data-line.still { transition: none; }

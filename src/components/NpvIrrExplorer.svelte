@@ -10,6 +10,21 @@
   let flows = Array(50).fill(0);
   let error = '';
   let view = 'input', project = null, hurdle = 15;
+  let fit = false;
+
+  // On a laptop or projector the analysis fills the window below the header, so nothing scrolls.
+  function fitToWindow(node) {
+    const mq = window.matchMedia('(min-width: 1000px) and (min-height: 540px)');
+    const update = () => {
+      fit = mq.matches;
+      const top = node.getBoundingClientRect().top + window.scrollY;
+      node.style.height = fit ? `${Math.max(500, window.innerHeight - top - 14)}px` : '';
+    };
+    update();
+    window.addEventListener('resize', update);
+    mq.addEventListener('change', update);
+    return { destroy() { window.removeEventListener('resize', update); mq.removeEventListener('change', update); } };
+  }
 
   $: lastYear = startYear + numYears - 1;
   $: perpYear = Math.min(Math.max(perpYear, startYear + 1), lastYear);
@@ -30,6 +45,7 @@
     project = { start: startYear, cashflows, perp, perpYear: usePerp ? perpYear : null, perpGrowth, minHurdle, maxHurdle, growth: useGrowth ? growthRate : 0 };
     hurdle = (Math.max(minHurdle, usePerp ? perpGrowth + 0.5 : minHurdle) + maxHurdle) / 2;
     view = 'analysis';
+    window.scrollTo(0, 0);
   }
 
   // ---- Analysis (mirrors the Streamlit visualisation page) ----
@@ -108,10 +124,10 @@
     <div class="button-row"><button class="button primary" type="button" on:click={analyze}>Analyse project</button></div>
   </section>
 {:else}
-  <section class="analysis">
+  <section class="analysis" class:fit use:fitToWindow>
     <aside class="side">
       <div>
-        <span class="kicker">NPV / IRR</span>
+        <button class="back" type="button" on:click={() => (view = 'input')}>← New project</button>
         <h1 class="side-title">{title}</h1>
       </div>
 
@@ -133,12 +149,12 @@
       </div>
       {#if project.perpYear !== null}<p class="note">Perpetuity: the year {project.perpYear} cash flow continues forever{project.perpGrowth !== 0 ? `, growing at ${project.perpGrowth.toFixed(1)}% a year` : ''}. Its bar is the present value of the whole perpetuity, cash flow / (r - g), discounted to today.</p>{/if}
 
-      <button class="new-project" type="button" on:click={() => (view = 'input')}>← New project</button>
     </aside>
 
     <div class="charts">
     <div class="panel npv-curve">
       <LineChart
+        fill={fit}
         title="NPV against the hurdle rate"
         xLabel="Hurdle rate (%)"
         yLabel="NPV (£)"
@@ -153,8 +169,8 @@
     </div>
 
     <div class="bars">
-      <div class="panel"><BarChart title={`Discount factors at ${hurdle.toFixed(1)}%`} yLabel="Discount factor" color="factor-bar" bars={factors.map((v, i) => ({ label: String(years[i]), value: v }))} format={v => v.toFixed(3)} /></div>
-      <div class="panel"><BarChart title={`Discounted cash flows · NPV ${money(npvNow)}`} yLabel="Discounted cash flow (£)" color="cash-bar" negColor="reject" bars={discounted.map((v, i) => ({ label: String(years[i]), value: v }))} format={v => money(v)} /></div>
+      <div class="panel"><BarChart fill={fit} title={`Discount factors at ${hurdle.toFixed(1)}%`} yLabel="Discount factor" color="factor-bar" bars={factors.map((v, i) => ({ label: String(years[i]), value: v }))} format={v => v.toFixed(3)} /></div>
+      <div class="panel"><BarChart fill={fit} title={`Discounted cash flows · NPV ${money(npvNow)}`} yLabel="Discounted (£)" color="cash-bar" negColor="reject" bars={discounted.map((v, i) => ({ label: String(years[i]), value: v }))} format={v => money(v)} /></div>
     </div>
     </div>
   </section>
@@ -174,9 +190,10 @@
   .note { background: var(--accent-soft); border-left: 2px solid var(--accent); padding: 10px 14px; font-size: .9rem; max-width: 80ch; }
   .error { color: var(--reject); font-weight: 600; }
   /* Analysis: a sticky sidebar with the controls, the charts in white panels beside it. */
-  .analysis { display: grid; grid-template-columns: 350px minmax(0, 1fr); gap: 32px; align-items: start; margin-top: 28px; }
+  .analysis { display: grid; grid-template-columns: clamp(365px, 24vw, 460px) minmax(0, 1fr); gap: 32px; align-items: start; margin-top: 28px; }
   .side { position: sticky; top: 16px; display: flex; flex-direction: column; gap: 22px; padding: 24px 26px 28px; border: 1px solid var(--rule); border-top: 6px solid var(--accent); border-radius: 12px; background: var(--paper); }
-  .kicker { font: .75rem var(--font-mono); color: var(--accent); }
+  .back { padding: 0; border: none; background: none; color: var(--accent); font: .85rem var(--font-body); cursor: pointer; }
+  .back:hover { text-decoration: underline; }
   .side-title { margin: 2px 0 0; font-size: 1.9rem; font-weight: 600; line-height: 1.1; letter-spacing: -.02em; }
   .side-label { font-size: .85rem; color: var(--muted); }
   .control-heading { display: flex; justify-content: space-between; color: var(--muted); }
@@ -184,7 +201,7 @@
   input[type='range'] { accent-color: var(--accent); width: 100%; margin: 0; }
   .decision { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border: 1px solid var(--rule); border-left: 5px solid currentColor; border-radius: 8px; }
   .decision strong { font-size: 1.35rem; font-weight: 700; }
-  .decision span { font: .75rem/1.5 var(--font-mono); color: var(--muted); }
+  .decision span { font: .8rem/1.5 var(--font-mono); color: var(--muted); }
   .decision.accept { color: var(--accept); }
   .decision.reject { color: var(--reject); }
   .decision.neutral { color: var(--muted); }
@@ -194,11 +211,22 @@
   tr:last-child td { border-bottom: none; }
   td.neg { color: var(--reject); }
   .side .note { margin: 0; font-size: .8rem; }
-  .new-project { min-height: 44px; border: 1px solid var(--accent); border-radius: 8px; background: var(--paper); color: var(--accent); cursor: pointer; }
-  .new-project:hover { background: var(--accent-soft); }
   .charts { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
   .panel { border: 1px solid var(--rule); border-radius: 12px; padding: 18px 22px 12px; background: var(--paper); min-width: 0; }
   .bars { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+  /* Fit mode: sidebar and chart grid share the window height; a long cash-flow list scrolls inside the sidebar. */
+  .analysis.fit { margin-top: 14px; --chart-tick-size: clamp(15px, 1vw, 19px); --chart-value-size: clamp(15px, 1vw, 19px); --chart-title-size: clamp(15px, 1vw, 19px); --chart-label-size: clamp(15px, 1vw, 19px); }
+  .fit .side { position: static; height: 100%; overflow-y: auto; gap: 12px; padding: 14px 20px 16px; }
+  .fit .side-title { font-size: 1.5rem; }
+  .fit .decision { padding: 10px 14px; }
+  .fit .decision strong { font-size: clamp(1.15rem, 1.2vw, 1.45rem); }
+  .fit td { padding: 4px 0; }
+  .fit table, .fit .decision span { font-size: clamp(.8rem, .85vw, 1rem); }
+  .fit .control-heading, .fit .side-label, .fit .back { font-size: clamp(.85rem, .85vw, 1rem); }
+  .fit .charts { display: grid; grid-template-rows: minmax(0, 1.15fr) minmax(0, 1fr); gap: 14px; height: 100%; }
+  .fit .bars { min-height: 0; }
+  .fit .panel { height: 100%; min-height: 0; padding: 10px 18px 6px; overflow: hidden; }
+  .fit :global(figcaption) { font-size: clamp(1rem, 1.1vw, 1.3rem) !important; margin-bottom: 2px !important; }
   @media (max-width: 1000px) { .analysis { grid-template-columns: 1fr; } .side { position: static; } }
   @media (max-width: 640px) { .bars { grid-template-columns: 1fr; } }
 </style>
