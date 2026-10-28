@@ -1,4 +1,4 @@
-# IB MSc Corporate Finance
+# IB MSc Finance & Accounting - Corporate Finance
 
 Interactive tools for BUSI70597 Corporate Finance, built with Astro and Svelte in the same style as the IB PhD Macroeconomics 1 site.
 
