@@ -98,7 +98,8 @@
   $: factors = discountFactors(r, cfs.length, start, perp);
   $: discounted = cfs.map((cf, i) => cf * factors[i]);
   $: npvNow = discounted.reduce((a, b) => a + b, 0);
-  $: rateMax = project ? Math.max(30, project.maxHurdle, irr !== null ? Math.ceil(irr * 115) : 0) : 30;
+  // The x axis matches the slider; an IRR above it shows only in the strip.
+  $: rateMax = project ? project.maxHurdle : 30;
   // A perpetuity's curve starts 2 points above g, where its NPV is finite and readable.
   $: rateMin = perp ? project.perpGrowth + 2 : 0;
   $: curve = Array.from({ length: 201 }, (_, i) => { const x = rateMin + (rateMax - rateMin) * i / 200; return { x, y: npv(x / 100, cfs, start, perp) }; });
@@ -219,7 +220,7 @@
           animate={false}
           xDomain={[rateMin, rateMax]}
           series={[{ id: 'npv', label: 'NPV', color: 'npv-line', width: 3.5, points: curve }]}
-          references={[{ axis: 'y', value: 0, label: '' }, ...(irr !== null ? [{ axis: 'x', value: irr * 100, label: `IRR ${(irr * 100).toFixed(2)}%`, pill: true, anchor: rising ? 'start' : 'end' }] : [])]}
+          references={[{ axis: 'y', value: 0, label: '' }, ...(irr !== null && irr * 100 >= rateMin && irr * 100 <= rateMax ? [{ axis: 'x', value: irr * 100, label: `IRR ${(irr * 100).toFixed(2)}%`, pill: true, anchor: rising ? 'start' : 'end' }] : [])]}
           markers={[{ x: hurdle, y: npvNow, color: npvNow >= 0 ? 'accept' : 'reject', label: `NPV ${money(npvNow)}`, pill: true, anchor: rising ? 'start' : 'end' }]}
         />
       </div>
