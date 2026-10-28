@@ -1,4 +1,5 @@
 <script>
+  import { tick } from 'svelte';
   import LineChart from './LineChart.svelte';
   import BarChart from './BarChart.svelte';
   import { npv, findIrr, detectPattern, applyGrowth, discountFactors } from '../lib/irr.js';
@@ -48,6 +49,26 @@
     window.scrollTo(0, 0);
   }
 
+  // ---- This week's problem set: questions that use NPV and IRR (PS3, Problems 2 and 3) ----
+  const ps2 = { label: 'Load', flows: [0, 540, 540, 540, -1900], perp: false, g: 0, max: 30, r: 15 };
+  const ps3 = [
+    { label: 'Book store', flows: [-300, 90], perp: true, g: 3, max: 60, r: 8 },
+    { label: 'Coffee shop', flows: [-200, 80], perp: true, g: 3, max: 60, r: 8 },
+    { label: 'Music store', flows: [-200, 110], perp: true, g: 0, max: 60, r: 8 },
+    { label: 'Gym', flows: [-200, 100], perp: true, g: 3, max: 60, r: 11 }
+  ];
+
+  // Fill the form, let the reactive values settle, then analyse at the question's cost of capital.
+  async function loadTemplate(t) {
+    startYear = 0; numYears = t.flows.length; minHurdle = 0; maxHurdle = t.max;
+    usePerp = t.perp; perpYear = t.flows.length - 1;
+    useGrowth = t.g !== 0; growthYear = 1; growthRate = t.g;
+    flows = [...t.flows, ...Array(50 - t.flows.length).fill(0)];
+    await tick();
+    analyze();
+    if (view === 'analysis') hurdle = t.r;
+  }
+
   // ---- Analysis (mirrors the Streamlit visualisation page) ----
   const money = v => `${v < 0 ? '-' : ''}£${Math.abs(v).toLocaleString('en-GB', { maximumFractionDigits: 0 })}`;
   $: cfs = project ? project.cashflows : [];
@@ -85,6 +106,7 @@
 </script>
 
 {#if view === 'input'}
+  <div class="setup">
   <section class="experiment">
     <h1 class="page-title">NPV and IRR</h1>
     <p class="lede">Enter a project's cash flows, then move the hurdle rate to see how NPV responds - and when the IRR rule works, flips, or breaks.</p>
@@ -123,6 +145,29 @@
     {#if error}<p class="error" role="alert">{error}</p>{/if}
     <div class="button-row"><button class="button primary" type="button" on:click={analyze}>Analyse project</button></div>
   </section>
+
+  <aside class="templates" aria-label="Problem set 3 templates">
+    <span class="kicker">This week · Problem Set 3</span>
+    <h2>Templates</h2>
+
+    <div class="template">
+      <h3>Problem 2 · Forgo maintenance</h3>
+      <p>Save £540k a year in years 1-3 by skipping maintenance, then pay £1.9m in year 4 (in £000).</p>
+      <p class="parts">For 2 a.-c.: the IRR, whether the IRR rule works, and for which costs of capital to forgo.</p>
+      <button type="button" on:click={() => loadTemplate(ps2)}>Load Problem 2</button>
+    </div>
+
+    <div class="template">
+      <h3>Problem 3 · Property near Imperial</h3>
+      <p>Four businesses that last forever: pay the initial investment now, then c<sub>1</sub> in year 1 growing at g.</p>
+      <table>
+        <thead><tr><th></th><th>Invest</th><th>c<sub>1</sub></th><th>g</th><th>r</th></tr></thead>
+        <tbody>{#each ps3 as t}<tr><td><button type="button" on:click={() => loadTemplate(t)}>{t.label}</button></td><td>{-t.flows[0]}</td><td>{t.flows[1]}</td><td>{t.g}%</td><td>{t.r}%</td></tr>{/each}</tbody>
+      </table>
+      <p class="parts">For 3 a.-b.: compare the NPVs at each r with the IRRs.</p>
+    </div>
+  </aside>
+  </div>
 {:else}
   <section class="analysis" class:fit use:fitToWindow>
     <aside class="side">
@@ -178,6 +223,21 @@
 
 <style>
   .page-title { font-size: clamp(2rem, 3.6vw, 3rem); margin: 30px 0 14px; }
+  /* Setup page: the form on the left, this week's templates on the right. */
+  .setup { display: grid; grid-template-columns: minmax(0, 1fr) clamp(340px, 28vw, 460px); gap: 48px; align-items: start; }
+  .templates { margin-top: 30px; display: flex; flex-direction: column; gap: 16px; padding: 22px 24px; border: 1px solid var(--rule); border-top: 6px solid var(--accent); border-radius: 12px; }
+  .templates h2 { margin: 0; font-size: 1.6rem; font-weight: 600; }
+  .templates .kicker { font: .8rem var(--font-mono); color: var(--accent); }
+  .template { display: flex; flex-direction: column; gap: 8px; padding-top: 14px; border-top: 1px solid var(--rule); }
+  .template h3 { margin: 0; font-size: 1.1rem; font-weight: 600; }
+  .template p { margin: 0; font-size: .9rem; line-height: 1.5; }
+  .template .parts { color: var(--muted); }
+  .template > button { align-self: flex-start; padding: 7px 16px; border: 1px solid var(--accent); border-radius: 8px; background: var(--accent); color: var(--paper); cursor: pointer; }
+  .template > button:hover { background: var(--paper); color: var(--accent); }
+  .template table { font: .85rem var(--font-mono); }
+  .template th { padding: 4px 0; border-bottom: 1px solid var(--rule); text-align: right; font-weight: 400; color: var(--muted); }
+  .template td button { padding: 0; border: none; background: none; color: var(--accent); font: 600 .9rem var(--font-body); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+  @media (max-width: 1000px) { .setup { grid-template-columns: 1fr; gap: 0; } }
   .lede { color: var(--muted); font-size: 1.1rem; line-height: 1.6; max-width: 70ch; }
   .experiment-title { margin-top: 28px; }
   .form-grid, .flows { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 16px 24px; margin-bottom: 16px; align-items: end; }
