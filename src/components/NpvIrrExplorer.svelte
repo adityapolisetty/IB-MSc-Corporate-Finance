@@ -98,8 +98,8 @@
   $: factors = discountFactors(r, cfs.length, start, perp);
   $: discounted = cfs.map((cf, i) => cf * factors[i]);
   $: npvNow = discounted.reduce((a, b) => a + b, 0);
-  // The x axis matches the slider; an IRR above it shows only in the strip.
-  $: rateMax = project ? project.maxHurdle : 30;
+  // The x axis matches the slider, stretching past it only so an IRR above it stays visible.
+  $: rateMax = project ? (irr !== null && irr * 100 > project.maxHurdle ? Math.ceil(irr * 115) : project.maxHurdle) : 30;
   // A perpetuity's curve starts 2 points above g, where its NPV is finite and readable.
   $: rateMin = perp ? project.perpGrowth + 2 : 0;
   $: curve = Array.from({ length: 201 }, (_, i) => { const x = rateMin + (rateMax - rateMin) * i / 200; return { x, y: npv(x / 100, cfs, start, perp) }; });
