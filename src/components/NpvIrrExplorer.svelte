@@ -7,6 +7,10 @@
   // ---- Setup form (mirrors the Streamlit "Project Setup" page) ----
   // Opens on a standard intro example: invest £1,000, receive £400 a year for 4 years (IRR 21.9%).
   let startYear = 0, minHurdle = 0, maxHurdle = 30, numYears = 5;
+  // Year under the cursor in the discounted cash flows chart; its factor and cash flow lift with it.
+  let linked = null;
+  // Slider steps show one decimal; a hurdle set to the IRR shows two, like the IRR itself.
+  const pct = h => (Number.isInteger(Math.round(h * 1e6) / 5e5) ? h.toFixed(1) : h.toFixed(2));
   let usePerp = false, perpYear = 1;
   let useGrowth = false, growthYear = 1, growthRate = 0;
   let flows = [-1000, 400, 400, 400, 400, ...Array(45).fill(0)];
@@ -122,6 +126,8 @@
 
   // NPV decides: accept when NPV at the hurdle rate is positive (the IRR rule flips or fails for other patterns).
   function decide(r, value) {
+    // At the IRR the NPV is zero up to rounding: the project is borderline.
+    if (Math.abs(value) < 0.5) return { tone: 'none', head: '= Indifferent', rule: 'NPV rule: £0 = 0' };
     const rule = `NPV rule: ${money(value)} ${value >= 0 ? '>' : '<'} 0`;
     return value >= 0 ? { tone: 'accept', head: '✓ Accept', rule } : { tone: 'reject', head: '✗ Reject', rule };
   }
@@ -129,7 +135,8 @@
   // The standard IRR rule (accept when IRR > hurdle), shown as is so students see where it disagrees with NPV.
   function decideIrr(r, rate) {
     if (rate === null) return { tone: 'none', head: '- No IRR', rule: 'IRR rule: not defined' };
-    const rule = `IRR rule: ${(rate * 100).toFixed(2)}% ${rate > r ? '>' : '<'} ${(r * 100).toFixed(1)}%`;
+    if (Math.abs(rate - r) < 1e-9) return { tone: 'none', head: '= Indifferent', rule: `IRR rule: ${(rate * 100).toFixed(2)}% = hurdle` };
+    const rule = `IRR rule: ${(rate * 100).toFixed(2)}% ${rate > r ? '>' : '<'} ${pct(r * 100)}%`;
     return rate > r ? { tone: 'accept', head: '✓ Accept', rule } : { tone: 'reject', head: '✗ Reject', rule };
   }
 </script>
@@ -205,13 +212,13 @@
         <h1 class="side-title">Capital budgeting</h1>
         <span class="side-label">Cash flows · {title}{project.perpYear !== null ? ` · ∞ year ${project.perpYear} continues forever${project.perpGrowth !== 0 ? `, growing ${project.perpGrowth.toFixed(1)}% a year` : ''}` : ''}</span>
         <div class="cf-row">
-          {#each cfs as cf, i}<div class="cf"><span>Year {years[i]}{project.perpYear === years[i] ? ' ∞' : ''}</span><strong class:neg={cf < 0}>{money(cf)}</strong></div>{/each}
+          {#each cfs as cf, i}<div class="cf" class:lift={linked === i}><span>Year {years[i]}{project.perpYear === years[i] ? ' ∞' : ''}</span><strong class:neg={cf < 0}>{money(cf)}</strong></div>{/each}
         </div>
       </div>
 
       <div class="block hurdle">
         <label class="slider">
-          <span class="control-heading"><span>Hurdle rate</span><output>{hurdle.toFixed(1)}%</output></span>
+          <span class="control-heading"><span>Hurdle rate</span><output>{pct(hurdle)}%</output></span>
           <input type="range" min={sliderMin} max={project.maxHurdle} step="0.5" bind:value={hurdle} />
           <span class="slider-note">WACC or cost of equity</span>
         </label>
@@ -220,7 +227,7 @@
       <div class="block verdict">
         <!-- Each measure sits next to the decision its own rule gives. -->
         <dl class="kpis decisions" aria-live="polite">
-          <div><dt>IRR</dt><dd>{irr !== null ? `${(irr * 100).toFixed(2)}%` : 'n/a'}</dd><div class={`decision ${irrDecision.tone}`}><strong>{irrDecision.head}</strong><span>{irrDecision.rule}</span></div></div>
+          <div><dt>IRR</dt><dd>{#if irr !== null}<button class="irr-set" type="button" title="Set the hurdle rate to the IRR" on:click={() => (hurdle = irr * 100)}>{(irr * 100).toFixed(2)}%</button>{:else}n/a{/if}</dd><div class={`decision ${irrDecision.tone}`}><strong>{irrDecision.head}</strong><span>{irrDecision.rule}</span></div></div>
           <div><dt>NPV</dt><dd class="npv" class:neg={npvNow < 0}>{money(npvNow)}</dd><div class={`decision ${decision.tone}`}><strong>{decision.head}</strong><span>{decision.rule}</span></div></div>
         </dl>
       </div>
@@ -243,8 +250,8 @@
           markers={[{ x: hurdle, y: npvNow, color: npvNow >= 0 ? 'accept' : 'reject', label: `NPV ${money(npvNow)}`, pill: true, anchor: rising ? 'start' : 'end' }]}
         />
       </div>
-      <div class="panel"><BarChart fill={fit} title={`Discount factors at ${hurdle.toFixed(1)}%`} yLabel="Discount factor" color="factor-bar" labelColor="accent" explain={factorTex} bars={factors.map((v, i) => ({ label: `Year ${years[i]}`, value: v }))} format={v => v.toFixed(3)} tickFormat={v => String(Number(v.toFixed(2)))} /></div>
-      <div class="panel"><BarChart fill={fit} title="Discounted cash flows" yLabel="Discounted (£)" color="cash-bar" negColor="reject" bars={discounted.map((v, i) => ({ label: `Year ${years[i]}`, value: v }))} format={v => money(v)} /></div>
+      <div class="panel"><BarChart fill={fit} title={`Discount factors at ${pct(hurdle)}%`} yLabel="Discount factor" color="factor-bar" labelColor="accent" explain={factorTex} highlight={linked} bars={factors.map((v, i) => ({ label: `Year ${years[i]}`, value: v }))} format={v => v.toFixed(3)} tickFormat={v => String(Number(v.toFixed(2)))} /></div>
+      <div class="panel"><BarChart fill={fit} title="Discounted cash flows" hoverable bind:hover={linked} yLabel="Discounted (£)" color="cash-bar" negColor="reject" bars={discounted.map((v, i) => ({ label: `Year ${years[i]}`, value: v }))} format={v => money(v)} /></div>
     </div>
   </section>
 {/if}
@@ -303,10 +310,13 @@
   .back:hover { text-decoration: underline; }
   .side-title { margin: 0; font-size: 1.9rem; font-weight: 700; line-height: 1.1; letter-spacing: -.01em; white-space: nowrap; }
   .side-label { margin-top: 2px; font-size: .9rem; color: var(--muted); }
-  .cf-row { display: flex; max-width: 100%; overflow-x: auto; }
+  /* Padding (offset by negative margins) leaves room for a lifted cell's shadow inside the scroll box. */
+  .cf-row { display: flex; max-width: calc(100% + 16px); overflow-x: auto; padding: 8px 8px 12px; margin: -8px -8px -12px; }
   .cf { display: flex; flex-direction: column; gap: 1px; padding: 0 12px; border-left: 1px solid var(--rule); white-space: nowrap; }
   .cf span { font-size: .8rem; color: var(--muted); }
   .cf strong { font-size: 1.2rem; font-weight: 700; }
+  .cf { padding-top: 4px; padding-bottom: 4px; border-radius: 8px; transition: transform .18s ease, box-shadow .18s ease, background .18s ease; }
+  .cf.lift { transform: translateY(-4px); background: var(--paper); box-shadow: 0 6px 12px rgb(6 29 149 / .22); }
   .neg { color: var(--reject); }
   .control-heading { display: flex; justify-content: space-between; align-items: baseline; color: var(--muted); }
   .control-heading output { color: var(--accent); font-size: 1.75rem; font-weight: 700; }
@@ -321,6 +331,8 @@
   .kpis > div { display: contents; }
   .kpis dt { width: 2.4em; color: var(--muted); }
   .kpis dd { margin: 0; font-size: 2rem; font-weight: 700; line-height: 1; color: var(--ink); }
+  .irr-set { padding: 0; border: none; background: none; font: inherit; color: inherit; cursor: pointer; }
+  .irr-set:hover { text-decoration: underline dotted; text-underline-offset: 6px; }
   .kpis dd.npv { color: var(--accent); }
   .kpis dd.npv.neg { color: var(--reject); }
   .charts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; min-width: 0; }
