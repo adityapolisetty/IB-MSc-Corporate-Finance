@@ -97,6 +97,18 @@
   $: years = cfs.map((_, i) => start + i);
   $: factors = discountFactors(r, cfs.length, start, perp);
   $: discounted = cfs.map((cf, i) => cf * factors[i]);
+  // Hover text for each discount factor: the general formula, then this year's numbers plugged in.
+  const dec = v => String(Number(v.toFixed(4)));
+  $: factorTex = i => {
+    const t = years[i];
+    const value = Number.isFinite(factors[i]) ? `= ${factors[i].toFixed(3)}` : '\\text{ undefined, as } r \\le g';
+    if (!perp || i !== perp.index) return [`DF_t = \\dfrac{1}{(1+r)^{t}}`, `DF_{${t}} = \\dfrac{1}{(1+${dec(r)})^{${t}}} ${value}`];
+    const general = perp.g ? '\\dfrac{1}{r-g}' : '\\dfrac{1}{r}';
+    const gText = perp.g < 0 ? `(${dec(perp.g)})` : dec(perp.g);
+    const plugged = perp.g ? `\\dfrac{1}{${dec(r)}-${gText}}` : `\\dfrac{1}{${dec(r)}}`;
+    // The plugged-in perpetuity line is long, so its result goes on a line of its own.
+    return [`DF_t = ${general} \\times \\dfrac{1}{(1+r)^{t-1}}`, `DF_{${t}} = ${plugged} \\times \\dfrac{1}{(1+${dec(r)})^{${t - 1}}}`, `\\phantom{DF_{${t}}} ${value}`];
+  };
   $: npvNow = discounted.reduce((a, b) => a + b, 0);
   // The x axis matches the slider, stretching past it only so an IRR above it stays visible.
   $: rateMax = project ? (irr !== null && irr * 100 > project.maxHurdle ? Math.ceil(irr * 115) : project.maxHurdle) : 30;
@@ -224,7 +236,7 @@
           markers={[{ x: hurdle, y: npvNow, color: npvNow >= 0 ? 'accept' : 'reject', label: `NPV ${money(npvNow)}`, pill: true, anchor: rising ? 'start' : 'end' }]}
         />
       </div>
-      <div class="panel"><BarChart fill={fit} title={`Discount factors at ${hurdle.toFixed(1)}%`} yLabel="Discount factor" color="factor-bar" labelColor="accent" bars={factors.map((v, i) => ({ label: `Year ${years[i]}`, value: v }))} format={v => v.toFixed(3)} tickFormat={v => String(Number(v.toFixed(2)))} /></div>
+      <div class="panel"><BarChart fill={fit} title={`Discount factors at ${hurdle.toFixed(1)}%`} yLabel="Discount factor" color="factor-bar" labelColor="accent" explain={factorTex} bars={factors.map((v, i) => ({ label: `Year ${years[i]}`, value: v }))} format={v => v.toFixed(3)} tickFormat={v => String(Number(v.toFixed(2)))} /></div>
       <div class="panel"><BarChart fill={fit} title={`Discounted cash flows · NPV ${money(npvNow)}`} yLabel="Discounted (£)" color="cash-bar" negColor="reject" bars={discounted.map((v, i) => ({ label: `Year ${years[i]}`, value: v }))} format={v => money(v)} /></div>
     </div>
   </section>

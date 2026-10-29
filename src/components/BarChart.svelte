@@ -1,6 +1,8 @@
 <script>
   import { onMount, afterUpdate } from 'svelte';
   import { scaleBand, scaleLinear } from 'd3';
+  import katex from 'katex';
+  import 'katex/dist/katex.min.css';
   // One bar per year, value printed on each bar; bars below zero hang from the zero line.
   export let title = '';
   export let yLabel = '';
@@ -11,6 +13,11 @@
   export let format = v => v.toFixed(2);
   export let tickFormat = format;
   export let fill = false;
+  // Optional hover box: explain(i) gives TeX lines for bar i, typeset with KaTeX.
+  export let explain = null;
+  let hover = null, tipWidth = 0;
+  $: tipLines = hover !== null && explain ? explain(hover).map(tex => katex.renderToString(tex, { throwOnError: false })) : [];
+  $: tipLeft = hover !== null ? Math.max(tipWidth / 2 + 2, Math.min(width - tipWidth / 2 - 2, x(bars[hover].label) + x.bandwidth() / 2)) : 0;
   let container, width = 420, boxHeight = 0, capHeight = 0;
   $: height = fill && boxHeight ? Math.max(140, boxHeight - capHeight - 14) : 300;
   $: margin = { top: 44, right: 10, bottom: 30, left: yLabelWidth ? yLabelWidth + 48 : 90 };
@@ -60,11 +67,21 @@
     <line class="axis" x1={margin.left} x2={width - margin.right} y1={y(0)} y2={y(0)} />
     <line class="axis" x1={margin.left} x2={margin.left} y1={margin.top} y2={height - margin.bottom} />
     <text class="axis-title" transform={`translate(14 ${(margin.top + height - margin.bottom) / 2}) rotate(-90)`} text-anchor="middle">{yLabel}</text>
+    {#if explain}{#each bars as b, i}<rect class="hit" class:on={hover === i} x={x(b.label) - x.step() * x.paddingInner() / 2} width={x.step()} y={margin.top} height={height - margin.top - margin.bottom} on:mouseenter={() => (hover = i)} on:mouseleave={() => (hover = null)} role="presentation" />{/each}{/if}
   </svg>
+  {#if tipLines.length}
+    <div class="tip" bind:offsetWidth={tipWidth} style={`left: ${tipLeft}px; top: ${capHeight + 6}px`}>
+      {#each tipLines as html}<div>{@html html}</div>{/each}
+    </div>
+  {/if}
 </figure>
 
 <style>
-  figure { margin: 0; width: 100%; }
+  figure { position: relative; margin: 0; width: 100%; }
+  .hit { fill: var(--accent); opacity: 0; cursor: help; }
+  .hit.on { opacity: .06; }
+  .tip { position: absolute; transform: translateX(-50%); display: grid; gap: 8px; padding: 10px 14px; border: 2px solid var(--accent); border-radius: 10px; background: var(--paper); color: var(--ink); font-size: .95rem; white-space: nowrap; pointer-events: none; box-shadow: 0 6px 18px rgb(0 0 0 / .12); }
+  .tip div:first-child { color: var(--muted); }
   figure.fill { height: 100%; overflow: hidden; }
   figcaption { font-family: var(--font-heading); font-size: 1.15rem; line-height: 1.4; margin-bottom: 6px; }
   svg { display: block; overflow: visible; }
