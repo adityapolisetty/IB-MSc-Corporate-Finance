@@ -234,6 +234,7 @@
           xLabel="Hurdle rate (%)"
           yLabel="NPV (£)"
           showLegend={false}
+          interactive={false}
           scaleCues={false}
           animate={false}
           xDomain={[rateMin, rateMax]}
