@@ -80,8 +80,7 @@
   figure { position: relative; margin: 0; width: 100%; }
   .hit { fill: var(--accent); opacity: 0; cursor: help; }
   .hit.on { opacity: .06; }
-  .tip { position: absolute; transform: translateX(-50%); display: grid; gap: 8px; padding: 10px 14px; border: 2px solid var(--accent); border-radius: 10px; background: var(--paper); color: var(--ink); font-size: .95rem; white-space: nowrap; pointer-events: none; box-shadow: 0 6px 18px rgb(0 0 0 / .12); }
-  .tip div:first-child { color: var(--muted); }
+  .tip { position: absolute; transform: translateX(-50%); display: grid; gap: 8px; padding: 10px 14px; border: 2px solid var(--accent); border-radius: 10px; background: var(--paper); color: var(--accent); font-size: .8rem; white-space: nowrap; pointer-events: none; box-shadow: 0 6px 18px rgb(0 0 0 / .12); }
   figure.fill { height: 100%; overflow: hidden; }
   figcaption { font-family: var(--font-heading); font-size: 1.15rem; line-height: 1.4; margin-bottom: 6px; }
   svg { display: block; overflow: visible; }

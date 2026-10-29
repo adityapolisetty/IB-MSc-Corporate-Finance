@@ -117,12 +117,20 @@
   $: curve = Array.from({ length: 201 }, (_, i) => { const x = rateMin + (rateMax - rateMin) * i / 200; return { x, y: npv(x / 100, cfs, start, perp) }; });
   $: title = pattern === 'investment' ? 'Investment pattern' : pattern === 'financing' ? 'Financing pattern' : 'Mixed pattern (multiple IRRs possible)';
   $: decision = decide(r, npvNow);
+  $: irrDecision = decideIrr(r, irr);
   $: rising = project ? npv(r + 0.005, cfs, start, perp) > npvNow : false;
 
   // NPV decides: accept when NPV at the hurdle rate is positive (the IRR rule flips or fails for other patterns).
   function decide(r, value) {
-    const rule = `NPV at ${(r * 100).toFixed(1)}% = ${money(value)} ${value >= 0 ? '>' : '<'} 0`;
+    const rule = `NPV rule: ${money(value)} ${value >= 0 ? '>' : '<'} 0`;
     return value >= 0 ? { tone: 'accept', head: '✓ Accept', rule } : { tone: 'reject', head: '✗ Reject', rule };
+  }
+
+  // The standard IRR rule (accept when IRR > hurdle), shown as is so students see where it disagrees with NPV.
+  function decideIrr(r, rate) {
+    if (rate === null) return { tone: 'none', head: '- No IRR', rule: 'IRR rule: not defined' };
+    const rule = `IRR rule: ${(rate * 100).toFixed(2)}% ${rate > r ? '>' : '<'} ${(r * 100).toFixed(1)}%`;
+    return rate > r ? { tone: 'accept', head: '✓ Accept', rule } : { tone: 'reject', head: '✗ Reject', rule };
   }
 </script>
 
@@ -205,13 +213,13 @@
         <label class="slider">
           <span class="control-heading"><span>Hurdle rate</span><output>{hurdle.toFixed(1)}%</output></span>
           <input type="range" min={sliderMin} max={project.maxHurdle} step="0.5" bind:value={hurdle} />
+          <span class="slider-note">WACC or cost of equity</span>
         </label>
       </div>
 
       <div class="block verdict">
-        <div class={`decision ${decision.tone}`} aria-live="polite">
-          <strong>{decision.head}</strong>
-          <span>{decision.rule}</span>
+        <div class="decisions" aria-live="polite">
+          {#each [decision, irrDecision] as d}<div class={`decision ${d.tone}`}><strong>{d.head}</strong><span>{d.rule}</span></div>{/each}
         </div>
         <dl class="kpis">
           <div><dt>IRR</dt><dd>{irr !== null ? `${(irr * 100).toFixed(2)}%` : 'n/a'}</dd></div>
@@ -290,6 +298,7 @@
   .intro { flex: 0 1 auto; max-width: 48%; }
   .hurdle { flex: 1 0 260px; align-items: center; }
   .slider { display: grid; gap: 6px; width: min(300px, 100%); }
+  .slider-note { font-size: .85rem; color: var(--muted); text-align: center; }
   .verdict { flex: 0 0 auto; flex-direction: row; align-items: center; gap: 26px; }
   .back { align-self: flex-start; padding: 0; border: none; background: none; color: var(--accent); font: .9rem var(--font-body); cursor: pointer; }
   .back:hover { text-decoration: underline; }
@@ -303,11 +312,13 @@
   .control-heading { display: flex; justify-content: space-between; align-items: baseline; color: var(--muted); }
   .control-heading output { color: var(--accent); font-size: 1.75rem; font-weight: 700; }
   input[type='range'] { accent-color: var(--accent); width: 100%; margin: 0; }
-  .decision { display: flex; flex-direction: column; gap: 6px; padding: 10px 16px; border: 1px solid var(--rule); border-left: 5px solid currentColor; border-radius: 10px; }
-  .decision strong { font-size: 1.75rem; font-weight: 700; line-height: 1; }
-  .decision span { font-size: .9rem; color: var(--muted); }
+  .decisions { display: grid; gap: 8px; }
+  .decision { display: flex; flex-direction: column; gap: 4px; padding: 7px 14px; border: 1px solid var(--rule); border-left: 5px solid currentColor; border-radius: 10px; }
+  .decision strong { font-size: 1.3rem; font-weight: 700; line-height: 1; }
+  .decision span { font-size: .85rem; color: var(--muted); white-space: nowrap; }
   .decision.accept { color: var(--accept); }
   .decision.reject { color: var(--reject); }
+  .decision.none { color: var(--muted); }
   .kpis { display: grid; gap: 10px; margin: 0; }
   .kpis div { display: flex; align-items: baseline; gap: 10px; }
   .kpis dt { width: 2.4em; color: var(--muted); }
