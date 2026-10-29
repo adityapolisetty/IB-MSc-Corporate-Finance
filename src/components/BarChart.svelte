@@ -92,6 +92,7 @@
   .hit.on { opacity: .06; }
   .bar { transition: transform .18s ease, filter .18s ease; }
   .bar.lift { transform: translateY(-5px); filter: drop-shadow(0 6px 6px rgb(6 29 149 / .28)); }
+  .bar.lift rect:not(.tag) { stroke: var(--accent); stroke-width: 2.5; }
   .tip { position: absolute; transform: translateX(-50%); display: grid; gap: 8px; padding: 10px 14px; border: 2px solid var(--accent); border-radius: 10px; background: var(--paper); color: var(--accent); font-size: .8rem; white-space: nowrap; pointer-events: none; box-shadow: 0 6px 18px rgb(0 0 0 / .12); }
   figure.fill { height: 100%; overflow: hidden; }
   figcaption { font-family: var(--font-heading); font-size: 1.15rem; line-height: 1.4; margin-bottom: 6px; }

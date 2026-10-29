@@ -316,7 +316,7 @@
   .cf span { font-size: .8rem; color: var(--muted); }
   .cf strong { font-size: 1.2rem; font-weight: 700; }
   .cf { padding-top: 4px; padding-bottom: 4px; border-radius: 8px; transition: transform .18s ease, box-shadow .18s ease, background .18s ease; }
-  .cf.lift { transform: translateY(-4px); background: var(--paper); box-shadow: 0 6px 12px rgb(6 29 149 / .22); }
+  .cf.lift { transform: translateY(-4px); background: var(--paper); box-shadow: 0 0 0 2px var(--ink), 0 6px 12px rgb(6 29 149 / .22); }
   .neg { color: var(--reject); }
   .control-heading { display: flex; justify-content: space-between; align-items: baseline; color: var(--muted); }
   .control-heading output { color: var(--accent); font-size: 1.75rem; font-weight: 700; }
