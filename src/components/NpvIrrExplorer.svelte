@@ -63,19 +63,6 @@
     { label: 'Gym', flows: [-200, 100], perp: true, g: 3, r: 11 }
   ];
 
-  // Templates unlock with the tutor's passcode; only its SHA-256 is in the code. Remembered per browser.
-  const PASS_HASH = '43a1c3e6ab6888a06f19ecfa21c59b04ea696c717035461430f9ccb3c867b962';
-  let unlocked = false, passInput = '', passError = '';
-  try { unlocked = localStorage.getItem('ps3-templates') === PASS_HASH; } catch (e) { unlocked = false; }
-
-  async function unlock() {
-    const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(passInput));
-    const hex = [...new Uint8Array(bytes)].map(b => b.toString(16).padStart(2, '0')).join('');
-    if (hex !== PASS_HASH) { passError = 'Wrong passcode'; return; }
-    unlocked = true; passError = '';
-    try { localStorage.setItem('ps3-templates', PASS_HASH); } catch (e) { /* private window: unlock lasts this visit */ }
-  }
-
   // Fill the form, let the reactive values settle, then analyse at the question's cost of capital.
   async function loadTemplate(t) {
     startYear = 0; numYears = t.flows.length;
@@ -182,24 +169,17 @@
 
   <aside class="templates" aria-label="Problem set 3 templates">
     <h2>Problem Set 3</h2>
-    {#if !unlocked}
-      <form class="lock" on:submit|preventDefault={unlock}>
-        <div><input id="ps3-pass" type="password" autocomplete="off" placeholder="Passcode" aria-label="Passcode to load the problems" bind:value={passInput} /><button type="submit">Unlock</button></div>
-        {#if passError}<span class="error" role="alert">{passError}</span>{/if}
-      </form>
-    {/if}
-
     <div class="template">
       <h3>Question 2 · Forgo maintenance</h3>
       <p>Save £540k a year in years 1-3, then pay £1.9m in year 4 (in £000). <span class="parts">Covers 2 a.-c.</span></p>
-      <button type="button" disabled={!unlocked} on:click={() => loadTemplate(ps2)}>Load Question 2</button>
+      <button type="button" on:click={() => loadTemplate(ps2)}>Load Question 2</button>
     </div>
 
     <div class="template">
       <h3>Question 3 · Property near Imperial</h3>
       <p>Each business lasts forever: invest now, then c<sub>1</sub> in year 1 growing at g. <span class="parts">Covers 3 a.-b.</span></p>
       <div class="choices">
-        {#each ps3 as t}<button type="button" disabled={!unlocked} on:click={() => loadTemplate(t)}><strong>{t.label}</strong><span>-{-t.flows[0]} · {t.flows[1]}</span><span>g {t.g}% · r {t.r}%</span></button>{/each}
+        {#each ps3 as t}<button type="button" on:click={() => loadTemplate(t)}><strong>{t.label}</strong><span>-{-t.flows[0]} · {t.flows[1]}</span><span>g {t.g}% · r {t.r}%</span></button>{/each}
       </div>
     </div>
   </aside>
@@ -267,11 +247,6 @@
   .analyse:hover { background: var(--paper); color: var(--accent); }
   .templates { display: flex; flex-direction: column; gap: 12px; padding: 16px 22px 20px; border: 1px solid var(--rule); border-top: 6px solid var(--accent); border-radius: 12px; }
   .templates h2 { margin: 0; font-size: 1.4rem; font-weight: 600; }
-  .lock { display: grid; gap: 4px; font-size: .85rem; }
-  .lock div { display: flex; gap: 8px; }
-  .lock input { flex-grow: 1; min-width: 0; border: 1px solid var(--rule); padding: 5px 10px; }
-  .lock input:focus { border-color: var(--accent); outline: none; }
-  .lock button { padding: 5px 14px; border: 1px solid var(--accent); border-radius: 8px; background: var(--accent); color: var(--paper); cursor: pointer; }
   .templates button:disabled { opacity: .35; cursor: not-allowed; }
   .template { display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: 1px solid var(--rule); }
   .template h3 { margin: 0; font-size: 1.1rem; font-weight: 600; }
