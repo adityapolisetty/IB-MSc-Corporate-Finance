@@ -218,12 +218,10 @@
       </div>
 
       <div class="block verdict">
-        <div class="decisions" aria-live="polite">
-          {#each [decision, irrDecision] as d}<div class={`decision ${d.tone}`}><strong>{d.head}</strong><span>{d.rule}</span></div>{/each}
-        </div>
-        <dl class="kpis">
-          <div><dt>IRR</dt><dd>{irr !== null ? `${(irr * 100).toFixed(2)}%` : 'n/a'}</dd></div>
-          <div><dt>NPV</dt><dd class="npv" class:neg={npvNow < 0}>{money(npvNow)}</dd></div>
+        <!-- Each measure sits next to the decision its own rule gives. -->
+        <dl class="kpis decisions" aria-live="polite">
+          <div><dt>IRR</dt><dd>{irr !== null ? `${(irr * 100).toFixed(2)}%` : 'n/a'}</dd><div class={`decision ${irrDecision.tone}`}><strong>{irrDecision.head}</strong><span>{irrDecision.rule}</span></div></div>
+          <div><dt>NPV</dt><dd class="npv" class:neg={npvNow < 0}>{money(npvNow)}</dd><div class={`decision ${decision.tone}`}><strong>{decision.head}</strong><span>{decision.rule}</span></div></div>
         </dl>
       </div>
     </div>
@@ -312,15 +310,14 @@
   .control-heading { display: flex; justify-content: space-between; align-items: baseline; color: var(--muted); }
   .control-heading output { color: var(--accent); font-size: 1.75rem; font-weight: 700; }
   input[type='range'] { accent-color: var(--accent); width: 100%; margin: 0; }
-  .decisions { display: grid; gap: 8px; }
   .decision { display: flex; flex-direction: column; gap: 4px; padding: 7px 14px; border: 1px solid var(--rule); border-left: 5px solid currentColor; border-radius: 10px; }
   .decision strong { font-size: 1.3rem; font-weight: 700; line-height: 1; }
   .decision span { font-size: .85rem; color: var(--muted); white-space: nowrap; }
   .decision.accept { color: var(--accept); }
   .decision.reject { color: var(--reject); }
   .decision.none { color: var(--muted); }
-  .kpis { display: grid; gap: 10px; margin: 0; }
-  .kpis div { display: flex; align-items: baseline; gap: 10px; }
+  .kpis { display: grid; grid-template-columns: auto auto auto; align-items: center; column-gap: 14px; row-gap: 8px; margin: 0; }
+  .kpis > div { display: contents; }
   .kpis dt { width: 2.4em; color: var(--muted); }
   .kpis dd { margin: 0; font-size: 2rem; font-weight: 700; line-height: 1; color: var(--ink); }
   .kpis dd.npv { color: var(--accent); }

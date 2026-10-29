@@ -15,9 +15,12 @@
   export let fill = false;
   // Optional hover box: explain(i) gives TeX lines for bar i, typeset with KaTeX.
   export let explain = null;
-  let hover = null, tipWidth = 0;
+  let hover = null, tipWidth = 0, tipHeight = 0, svgEl;
   $: tipLines = hover !== null && explain ? explain(hover).map(tex => katex.renderToString(tex, { throwOnError: false })) : [];
   $: tipLeft = hover !== null ? Math.max(tipWidth / 2 + 2, Math.min(width - tipWidth / 2 - 2, x(bars[hover].label) + x.bandwidth() / 2)) : 0;
+  // The box sits 12px above the bar's value tag; with no room there, 12px below the tag.
+  $: tagTop = hover !== null ? (svgEl.getBoundingClientRect().top - container.getBoundingClientRect().top) + Math.min(y(bars[hover].value), y(0)) - 34 : 0;
+  $: tipTop = tagTop - 12 - tipHeight >= 0 ? tagTop - 12 - tipHeight : tagTop + 27 + 12;
   let container, width = 420, boxHeight = 0, capHeight = 0;
   $: height = fill && boxHeight ? Math.max(140, boxHeight - capHeight - 14) : 300;
   $: margin = { top: 44, right: 10, bottom: 30, left: yLabelWidth ? yLabelWidth + 48 : 90 };
@@ -51,7 +54,7 @@
 
 <figure bind:this={container} class:fill aria-label={title}>
   <figcaption bind:clientHeight={capHeight}>{title}</figcaption>
-  <svg viewBox={`0 0 ${width} ${height}`} width="100%" height={height} role="img" aria-label={title}>
+  <svg bind:this={svgEl} viewBox={`0 0 ${width} ${height}`} width="100%" height={height} role="img" aria-label={title}>
     {#each y.ticks(height < 240 ? 3 : 5) as tick}<line class="grid" x1={margin.left} x2={width - margin.right} y1={y(tick)} y2={y(tick)} /><text class="tick ytick" x={margin.left - 10} y={y(tick) + 4} text-anchor="end">{tickFormat(tick)}</text>{/each}
     {#each bars as b}
       <rect x={x(b.label)} width={x.bandwidth()} y={Math.min(y(0), y(b.value))} height={Math.abs(y(b.value) - y(0))} fill={`var(--${b.value < 0 && negColor ? negColor : color})`}><title>{b.label}: {format(b.value)}</title></rect>
@@ -70,7 +73,7 @@
     {#if explain}{#each bars as b, i}<rect class="hit" class:on={hover === i} x={x(b.label) - x.step() * x.paddingInner() / 2} width={x.step()} y={margin.top} height={height - margin.top - margin.bottom} on:mouseenter={() => (hover = i)} on:mouseleave={() => (hover = null)} role="presentation" />{/each}{/if}
   </svg>
   {#if tipLines.length}
-    <div class="tip" bind:offsetWidth={tipWidth} style={`left: ${tipLeft}px; top: ${capHeight + 6}px`}>
+    <div class="tip" bind:offsetWidth={tipWidth} bind:offsetHeight={tipHeight} style={`left: ${tipLeft}px; top: ${tipTop}px`}>
       {#each tipLines as html}<div>{@html html}</div>{/each}
     </div>
   {/if}
@@ -78,7 +81,7 @@
 
 <style>
   figure { position: relative; margin: 0; width: 100%; }
-  .hit { fill: var(--accent); opacity: 0; cursor: help; }
+  .hit { fill: var(--accent); opacity: 0; }
   .hit.on { opacity: .06; }
   .tip { position: absolute; transform: translateX(-50%); display: grid; gap: 8px; padding: 10px 14px; border: 2px solid var(--accent); border-radius: 10px; background: var(--paper); color: var(--accent); font-size: .8rem; white-space: nowrap; pointer-events: none; box-shadow: 0 6px 18px rgb(0 0 0 / .12); }
   figure.fill { height: 100%; overflow: hidden; }
