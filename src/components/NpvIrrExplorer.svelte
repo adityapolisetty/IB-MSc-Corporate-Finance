@@ -243,7 +243,7 @@
         />
       </div>
       <div class="panel"><BarChart fill={fit} title={`Discount factors at ${hurdle.toFixed(1)}%`} yLabel="Discount factor" color="factor-bar" labelColor="accent" explain={factorTex} bars={factors.map((v, i) => ({ label: `Year ${years[i]}`, value: v }))} format={v => v.toFixed(3)} tickFormat={v => String(Number(v.toFixed(2)))} /></div>
-      <div class="panel"><BarChart fill={fit} title={`Discounted cash flows · NPV ${money(npvNow)}`} yLabel="Discounted (£)" color="cash-bar" negColor="reject" bars={discounted.map((v, i) => ({ label: `Year ${years[i]}`, value: v }))} format={v => money(v)} /></div>
+      <div class="panel"><BarChart fill={fit} title="Discounted cash flows" yLabel="Discounted (£)" color="cash-bar" negColor="reject" bars={discounted.map((v, i) => ({ label: `Year ${years[i]}`, value: v }))} format={v => money(v)} /></div>
     </div>
   </section>
 {/if}
