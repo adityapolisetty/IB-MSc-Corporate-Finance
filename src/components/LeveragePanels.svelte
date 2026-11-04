@@ -26,6 +26,7 @@
   $: Y_WACC = 100 - s.ratePos(s.rA);
   $: Y_RD = 100 - s.ratePos(RATE_DEBT);
   $: side = g.x <= 55 ? '14px' : 'calc(-100% - 14px)';
+  $: otherSide = g.x <= 55 ? 'calc(-100% - 14px)' : '14px';
 
   // WACC panel: the bar's r_A marker; one line per piece follows in the bar's left-to-right order.
   $: RA_POS = s.stackPos(s.rA);
@@ -36,7 +37,7 @@
     <h3>Return in each state</h3>
     <div class="plot">
       <div class="row">
-        <div class="head"><span><Tex tex={TEX_RA} /> Assets</span><span class="vals"><span><b>{fmtSigned(A_UP)}</b> in Good state</span><span><b class="dn">{fmtSigned(A_DOWN)}</b> in Bad state</span></span></div>
+        <div class="head"><span><Tex tex={TEX_RA} /> Assets</span><span class="vals"><span><b>{fmtSigned(A_UP)}</b> <small>in Good state</small></span><span><b class="dn">{fmtSigned(A_DOWN)}</b> <small>in Bad state</small></span></span></div>
         <div class="lane">
           {#each RET_TICKS as k}<i class="gl" class:zero={k.v === 0} style:left="{s.returnPos(k.v / 100)}%"></i>{/each}
           <div class="band assets" style:left="{s.returnPos(A_DOWN)}%" style:width="{s.returnPos(A_UP) - s.returnPos(A_DOWN)}%"></div>
@@ -45,15 +46,15 @@
         </div>
       </div>
       <div class="row">
-        <div class="head"><span><Tex tex={TEX_RD} /> Debt</span><span class="vals"><span><b>{fmtSigned(RATE_DEBT)}</b> in Good state</span><span><b>{fmtSigned(RATE_DEBT)}</b> in Bad state</span></span></div>
+        <div class="head"><span><Tex tex={TEX_RD} /> Debt</span><span class="vals"><span><b>{fmtSigned(RATE_DEBT)}</b> <small>in Good state</small></span><span><b>{fmtSigned(RATE_DEBT)}</b> <small>in Bad state</small></span></span></div>
         <div class="lane">
           {#each RET_TICKS as k}<i class="gl" class:zero={k.v === 0} style:left="{s.returnPos(k.v / 100)}%"></i>{/each}
-          <div class="dot debt" style:left="{s.returnPos(RATE_DEBT)}%"></div>
-          <span class="mean dbt" style:left="{s.returnPos(RATE_DEBT)}%">Mean {fmtPct(RATE_DEBT, 1)}</span>
+          <div class="dot ring" style:left="{s.returnPos(RATE_DEBT)}%"></div>
+          <span class="mean" style:left="{s.returnPos(RATE_DEBT)}%">Mean {fmtPct(RATE_DEBT, 1)}</span>
         </div>
       </div>
       <div class="row">
-        <div class="head eq"><span><Tex tex={TEX_RE} /> Equity</span><span class="vals"><span><b>{fmtSigned(m.returnUp)}</b> in Good state</span><span><b class="dn">{fmtSigned(m.returnDown)}</b> in Bad state</span></span></div>
+        <div class="head eq"><span><Tex tex={TEX_RE} /> Equity</span><span class="vals"><span><b>{fmtSigned(m.returnUp)}</b> <small>in Good state</small></span><span><b class="dn">{fmtSigned(m.returnDown)}</b> <small>in Bad state</small></span></span></div>
         <div class="lane">
           {#each RET_TICKS as k}<i class="gl" class:zero={k.v === 0} style:left="{s.returnPos(k.v / 100)}%"></i>{/each}
           <div class="band equity" style:left="{g.retDown}%" style:width="{g.retUp - g.retDown}%"></div>
@@ -95,9 +96,12 @@
       </svg>
       <div class="pt" class:tax={taxOn} style:left="{g.x}%" style:bottom="{g.rateW}%"></div>
       <div class="pt eq-pt" style:left="{g.x}%" style:bottom="{g.rateE}%"></div>
+      <div class="pt rd-pt" style:left="{g.x}%" style:bottom="{s.ratePos(RATE_DEBT)}%"></div>
       <!-- r_E is never below WACC: its label sits above its dot and WACC's sits just under its own line. -->
       <span class="val eq" style:left="{g.x}%" style:bottom="calc({g.rateE}% + 12px)" style:transform="translateX({side})">{fmtPct(m.rE, 1)}</span>
       <span class="val" class:tax={taxOn} style:left="{g.x}%" style:bottom="calc({g.rateW}% - 5px)" style:transform="translate({side}, 100%)">{fmtPct(m.wacc, 1)}</span>
+      <!-- r_D's label sits above its line on the other side of the marker, clear of the dashed after-tax line. -->
+      <span class="val rd" style:left="{g.x}%" style:bottom="calc({s.ratePos(RATE_DEBT)}% + 5px)" style:transform="translateX({otherSide})">{fmtPct(RATE_DEBT, 1)}</span>
     </div>
   </div>
 
@@ -139,6 +143,7 @@
   .head { display: flex; justify-content: space-between; align-items: baseline; white-space: nowrap; font-size: var(--fs); font-weight: 700; line-height: 1.25; }
   .vals { display: flex; flex-direction: column; align-items: flex-end; font-weight: 400; color: var(--muted); }
   .vals b { font-weight: 700; color: var(--ink); }
+  .vals small { font-size: var(--fs-s); }
   .head.eq .vals b:not(.dn) { color: var(--accent); }
   .vals b.dn { color: var(--reject); }
   .lane { position: relative; flex: 1 1 auto; min-height: var(--lane); }
@@ -152,12 +157,10 @@
   .band.assets::after { background: var(--muted); }
   .band.equity::after { background: var(--accent); }
   .mean { position: absolute; bottom: calc(50% + 15px); transform: translateX(-50%); padding: 0 3px; background: var(--paper); font-size: var(--fs-s); font-weight: 700; color: var(--ink); white-space: nowrap; }
-  .mean.dbt { color: var(--debt-ink); }
   .mean.eq { color: var(--accent); }
   .dot { position: absolute; top: calc(50% - 12px); width: 24px; height: 24px; margin-left: -12px; border-radius: 50%; box-sizing: border-box; }
   .dot.ring { background: var(--paper); border: 3px solid var(--ink); }
   .dot.eq-ring { border-color: var(--accent); }
-  .dot.debt { background: var(--debt-ink); }
   .axis { position: relative; height: 1.3em; font-size: var(--fs-s); color: var(--muted); }
   .axis span { position: absolute; transform: translateX(-50%); }
   .axis .first { transform: none; }
@@ -186,9 +189,11 @@
   .pt { position: absolute; width: 14px; height: 14px; border-radius: 50%; background: var(--ink); transform: translate(-50%, 50%); }
   .pt.tax { background: var(--tax); }
   .pt.eq-pt { background: var(--accent); }
+  .pt.rd-pt { background: var(--debt-ink); }
   .val { position: absolute; font-size: calc(var(--fs) * 1.05); line-height: 18px; font-weight: 700; white-space: nowrap; color: var(--ink); text-shadow: 0 0 3px var(--paper), 0 0 3px var(--paper), 0 0 3px var(--paper); }
   .val.eq { color: var(--accent); }
   .val.tax { color: var(--tax); }
+  .val.rd { color: var(--debt-ink); }
 
   /* WACC decomposed */
   .barwrap { position: relative; padding-top: 1.6em; }

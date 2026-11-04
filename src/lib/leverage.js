@@ -9,7 +9,7 @@
 // Two worked examples: assets worth `today` at date 1, then `up` or `down` at date 2, each with
 // probability 1/2. The Tutorial 4 recap, and PS4 Question 1 (the lecture example with debt of 700).
 export const SCENARIOS = {
-  recap: { label: 'Recap example', today: 100, up: 130, down: 90, vdStart: 50 },
+  recap: { label: 'Example', today: 100, up: 130, down: 90, vdStart: 50 },
   ps4: { label: 'PS4, Question 1', today: 1000, up: 1400, down: 900, vdStart: 700 }
 };
 
