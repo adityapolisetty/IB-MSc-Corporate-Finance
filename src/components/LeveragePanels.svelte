@@ -43,6 +43,7 @@
           {#each RET_TICKS as k}<i class="gl" class:zero={k.v === 0} style:left="{returnPos(k.v / 100)}%"></i>{/each}
           <div class="band assets" style:left="{returnPos(A_DOWN)}%" style:width="{returnPos(A_UP) - returnPos(A_DOWN)}%"></div>
           <div class="dot ring" style:left="{returnPos(A_EXP)}%"></div>
+          <span class="mean" style:left="{returnPos(A_EXP)}%">Mean {fmtPct(A_EXP, 1)}</span>
         </div>
       </div>
       <div class="row">
@@ -50,6 +51,7 @@
         <div class="lane">
           {#each RET_TICKS as k}<i class="gl" class:zero={k.v === 0} style:left="{returnPos(k.v / 100)}%"></i>{/each}
           <div class="dot debt" style:left="{returnPos(RATE_DEBT)}%"></div>
+          <span class="mean dbt" style:left="{returnPos(RATE_DEBT)}%">Mean {fmtPct(RATE_DEBT, 1)}</span>
         </div>
       </div>
       <div class="row">
@@ -58,6 +60,7 @@
           {#each RET_TICKS as k}<i class="gl" class:zero={k.v === 0} style:left="{returnPos(k.v / 100)}%"></i>{/each}
           <div class="band equity" style:left="{g.retDown}%" style:width="{g.retUp - g.retDown}%"></div>
           <div class="dot ring eq-ring" style:left="{g.retExp}%"></div>
+          <span class="mean eq" style:left="{g.retExp}%">Mean {fmtPct(m.rE, 1)}</span>
         </div>
       </div>
       <div class="axis" aria-hidden="true">
@@ -134,6 +137,7 @@
   /* Return in each state */
   .plot { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; gap: 8px; --lane: 22px; }
   .row { flex: 1 1 0; display: flex; flex-direction: column; }
+  .row + .row { padding-top: 6px; border-top: 1px solid var(--rule); }
   .head { display: flex; justify-content: space-between; align-items: baseline; white-space: nowrap; font-size: var(--fs); font-weight: 700; line-height: 1.25; }
   .vals { display: flex; flex-direction: column; align-items: flex-end; font-weight: 400; color: var(--muted); }
   .vals b { font-weight: 700; color: var(--ink); }
@@ -142,7 +146,14 @@
   .lane { position: relative; flex: 1 1 auto; min-height: var(--lane); }
   .gl { position: absolute; top: 0; bottom: 0; border-left: 1px solid var(--rule); }
   .gl.zero { border-left-color: var(--ink); }
-  .band { position: absolute; top: calc(50% - 8px); height: 16px; box-sizing: border-box; border-left: 4px solid var(--reject); transition: left .3s cubic-bezier(.34, 1.56, .64, 1), width .3s cubic-bezier(.34, 1.56, .64, 1); }
+  .band { position: absolute; top: calc(50% - 4px); height: 8px; transition: left .3s cubic-bezier(.34, 1.56, .64, 1), width .3s cubic-bezier(.34, 1.56, .64, 1); }
+  /* End stems ride on the bar so they move with it: Bad end in red, Good end in the bar's colour. */
+  .band::before, .band::after { content: ''; position: absolute; top: -8px; width: 3px; height: 24px; }
+  .band::before { left: -1.5px; background: var(--reject); }
+  .band::after { right: -1.5px; background: inherit; }
+  .mean { position: absolute; bottom: calc(50% + 15px); transform: translateX(-50%); padding: 0 3px; background: var(--paper); font-size: var(--fs-s); font-weight: 700; color: var(--ink); white-space: nowrap; }
+  .mean.dbt { color: var(--debt-ink); }
+  .mean.eq { color: var(--accent); }
   .band.assets { background: var(--muted); }
   .band.equity { background: var(--accent); }
   .dot { position: absolute; top: calc(50% - 12px); width: 24px; height: 24px; margin-left: -12px; border-radius: 50%; box-sizing: border-box; }
