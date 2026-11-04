@@ -40,7 +40,7 @@
     <h3>Return in each state</h3>
     <div class="plot">
       <div class="row">
-        <div class="head"><span><Tex tex={TEX_RA} /> Assets</span><span class="vals"><b class="dn">{fmtSigned(A_DOWN)}</b> to <b>{fmtSigned(A_UP)}</b></span></div>
+        <div class="head"><span><Tex tex={TEX_RA} /> Assets</span><span class="vals"><span><b>{fmtSigned(A_UP)}</b> in Good state</span><span><b class="dn">{fmtSigned(A_DOWN)}</b> in Bad state</span></span></div>
         <div class="lane">
           {#each RET_TICKS as k}<i class="gl" class:zero={k.v === 0} style:left="{returnPos(k.v / 100)}%"></i>{/each}
           <div class="band assets" style:left="{returnPos(A_DOWN)}%" style:width="{returnPos(A_UP) - returnPos(A_DOWN)}%"></div>
@@ -48,14 +48,14 @@
         </div>
       </div>
       <div class="row">
-        <div class="head"><span><Tex tex={TEX_RD} /> Debt</span><span class="vals"><b>{fmtSigned(RATE_DEBT)}</b> in both</span></div>
+        <div class="head"><span><Tex tex={TEX_RD} /> Debt</span><span class="vals"><span><b>{fmtSigned(RATE_DEBT)}</b> in Good state</span><span><b>{fmtSigned(RATE_DEBT)}</b> in Bad state</span></span></div>
         <div class="lane">
           {#each RET_TICKS as k}<i class="gl" class:zero={k.v === 0} style:left="{returnPos(k.v / 100)}%"></i>{/each}
           <div class="dot debt" style:left="{returnPos(RATE_DEBT)}%"></div>
         </div>
       </div>
       <div class="row">
-        <div class="head eq"><span><Tex tex={TEX_RE} /> Equity</span><span class="vals"><b class="dn">{fmtSigned(m.returnDown)}</b> to <b>{fmtSigned(m.returnUp)}</b></span></div>
+        <div class="head eq"><span><Tex tex={TEX_RE} /> Equity</span><span class="vals"><span><b>{fmtSigned(m.returnUp)}</b> in Good state</span><span><b class="dn">{fmtSigned(m.returnDown)}</b> in Bad state</span></span></div>
         <div class="lane">
           {#each RET_TICKS as k}<i class="gl" class:zero={k.v === 0} style:left="{returnPos(k.v / 100)}%"></i>{/each}
           <div class="band equity" style:left="{g.retDown}%" style:width="{g.retUp - g.retDown}%"></div>
@@ -137,7 +137,7 @@
   /* Return in each state */
   .plot { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; justify-content: space-around; --lane: 22px; }
   .head { display: flex; justify-content: space-between; align-items: baseline; white-space: nowrap; font-size: var(--fs); font-weight: 700; line-height: 1.25; }
-  .vals { font-weight: 400; color: var(--muted); }
+  .vals { display: flex; flex-direction: column; align-items: flex-end; font-weight: 400; color: var(--muted); }
   .vals b { font-weight: 700; color: var(--ink); }
   .head.eq .vals b:not(.dn) { color: var(--accent); }
   .vals b.dn { color: var(--reject); }

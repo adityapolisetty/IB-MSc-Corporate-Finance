@@ -40,7 +40,7 @@
         <input type="range" min="0" max={DEBT_MAX} step="1" bind:value={vd} style:width="{DEBT_MAX_PCT}%" aria-describedby="lev-stop" />
       </span>
       <span class="ticks" aria-hidden="true"><span style:left="0%">0</span><span style:left="50%">50</span><span style:left="{DEBT_MAX_PCT}%">85.7</span></span>
-      <span class="note" id="lev-stop">Hatched: beyond 85.7 the down state could not repay the debt.</span>
+      <span class="note" id="lev-stop">Hatched: beyond 85.7 the Bad state could not repay the debt.</span>
     </label>
     <div class="taxes" role="group" aria-label="Corporate tax">
       <button type="button" aria-pressed={!taxOn} on:click={() => (taxOn = false)}>No taxes</button>
@@ -65,14 +65,14 @@
           <div class="equity">{#if m.equityToday >= 12}{fmtNum(m.equityToday)}{/if}</div>
         </div>
 
-        <span class="node-label" style:left="52%" style:top="calc(10% - 20px)">Up ½ · worth 130</span>
+        <span class="node-label" style:left="52%" style:top="calc(10% - 20px)">Good ½ · worth 130</span>
         <div class="node" style:left="52%" style:top="10%" style:width="32.5%">
           <div class="debt" style:width="{g.debtUpShare}%">{#if m.debtOwed >= 12}{fmtNum(m.debtOwed)}{/if}</div>
           <div class="equity">{#if m.equityUp >= 12}{fmtNum(m.equityUp)}{/if}</div>
         </div>
         <span class="ret up" style:left="calc(84.5% + 14px)" style:top="calc(10% + 6px)">{fmtSigned(m.returnUp)}</span>
 
-        <span class="node-label" style:left="52%" style:top="calc(90% - 64px)">Down ½ · worth 90</span>
+        <span class="node-label" style:left="52%" style:top="calc(90% - 64px)">Bad ½ · worth 90</span>
         <div class="node" style:left="52%" style:top="calc(90% - 44px)" style:width="22.5%">
           <div class="debt" style:width="{g.debtDownShare}%">{#if m.debtOwed >= 12}{fmtNum(m.debtOwed)}{/if}</div>
           <div class="equity">{#if m.equityDown >= 12}{fmtNum(m.equityDown)}{/if}</div>
