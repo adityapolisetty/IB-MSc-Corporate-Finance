@@ -59,20 +59,20 @@
         <span class="half" style:top="25%">½</span>
         <span class="half" style:top="66%">½</span>
 
-        <span class="node-label" style:left="0" style:top="calc(50% - 42px)">Date 1 · worth 100</span>
+        <span class="node-label" style:left="0" style:top="calc(50% - 46px)">Date 1 · worth 100</span>
         <div class="node" style:left="0" style:top="calc(50% - 22px)" style:width="25%">
           <div class="debt" style:width="{m.vd}%">{#if m.vd >= 12}{fmtNum(m.vd)}{/if}</div>
           <div class="equity">{#if m.equityToday >= 12}{fmtNum(m.equityToday)}{/if}</div>
         </div>
 
-        <span class="node-label" style:left="52%" style:top="calc(10% - 20px)">Good ½ · worth 130</span>
+        <span class="node-label" style:left="52%" style:top="calc(10% - 25px)">Good ½ · worth 130</span>
         <div class="node" style:left="52%" style:top="10%" style:width="32.5%">
           <div class="debt" style:width="{g.debtUpShare}%">{#if m.debtOwed >= 12}{fmtNum(m.debtOwed)}{/if}</div>
           <div class="equity">{#if m.equityUp >= 12}{fmtNum(m.equityUp)}{/if}</div>
         </div>
         <span class="ret up" style:left="calc(84.5% + 14px)" style:top="calc(10% + 6px)">{fmtSigned(m.returnUp)}</span>
 
-        <span class="node-label" style:left="52%" style:top="calc(90% - 64px)">Bad ½ · worth 90</span>
+        <span class="node-label" style:left="52%" style:top="calc(90% - 69px)">Bad ½ · worth 90</span>
         <div class="node" style:left="52%" style:top="calc(90% - 44px)" style:width="22.5%">
           <div class="debt" style:width="{g.debtDownShare}%">{#if m.debtOwed >= 12}{fmtNum(m.debtOwed)}{/if}</div>
           <div class="equity">{#if m.equityDown >= 12}{fmtNum(m.equityDown)}{/if}</div>
@@ -126,8 +126,8 @@
   .tree { position: relative; height: 236px; }
   .tree svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
   .tree path { fill: none; stroke: var(--debt-ink); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
-  .half { position: absolute; left: 37%; font-size: .8rem; color: var(--muted); }
-  .node-label { position: absolute; font-size: .75rem; color: var(--muted); white-space: nowrap; }
+  .half { position: absolute; left: 37%; font-size: 1.05rem; font-weight: 700; color: var(--ink); }
+  .node-label { position: absolute; font-size: .95rem; font-weight: 700; color: var(--ink); white-space: nowrap; }
   .node { position: absolute; height: 44px; display: flex; font-size: .8rem; font-weight: 600; font-variant-numeric: tabular-nums; }
   .node div { display: flex; align-items: center; justify-content: center; overflow: hidden; transition: width .25s ease; }
   .debt { background: var(--debt); color: var(--ink); }
