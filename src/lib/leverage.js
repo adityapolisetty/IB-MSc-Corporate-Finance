@@ -56,9 +56,9 @@ export function leverage(vd, tau) {
 // ============================================================
 
 // Every chart works in percent of its own box: returns -100% to +180%, rates 0-45%, WACC 0-12%.
-const returnPos = r => ((r * 100 + 100) / 280) * 100;
-const ratePos = r => (r / 0.45) * 100;
-const stackPos = r => (r / 0.12) * 100;
+export const returnPos = r => ((r * 100 + 100) / 280) * 100;
+export const ratePos = r => (r / 0.45) * 100;
+export const stackPos = r => (r / 0.12) * 100;
 
 // Positions for the current slider value; tau sets where the (possibly hidden) tax lines sit.
 export function geometry(m, tau) {

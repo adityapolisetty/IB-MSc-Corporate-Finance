@@ -2,6 +2,7 @@
   // Debt makes equity riskier: one V_D slider drives an event tree of cash flows to debt and equity
   // and three panels (returns by state, costs of capital, WACC pieces); a switch adds corporate tax.
   import LeveragePanels from './LeveragePanels.svelte';
+  import Tex from './Tex.svelte';
   import { leverage, geometry, fmtNum, fmtPct, fmtSigned, DEBT_MAX, DEBT_MAX_PCT } from '../lib/leverage.js';
   import { fitToWindow } from '../lib/fit.js';
 
@@ -18,6 +19,18 @@
   $: g = geometry(m, TAX_PCT / 100);
   $: upMid = 10 + (22 / treeHeight) * 100;
   $: downMid = 90 - (22 / treeHeight) * 100;
+
+  // TeX for the page's math: String.raw keeps the backslashes, and % is escaped for TeX.
+  const tex = String.raw;
+  const texPct = (x, digits) => fmtPct(x, digits).replace('%', '\\%');
+  const HALF = tex`\tfrac{1}{2}`;
+  const TEX_TAU = tex`\tau = ${TAX_PCT}\%`;
+
+  // The expectation and r_E lines under the tree; the results are separate so they can take their own colour.
+  $: texExpected = tex`= \tfrac{1}{2} \times ${fmtNum(m.equityUp)} + \tfrac{1}{2} \times ${fmtNum(m.equityDown)} =`;
+  $: texExpectedValue = tex`\boldsymbol{${fmtNum(m.equityExpected)}}`;
+  $: texRE = tex`\boldsymbol{r_E = ${fmtNum(m.equityExpected)} \div ${fmtNum(m.equityToday)} - 1 =}`;
+  $: texREValue = tex`\boldsymbol{${texPct(m.rE, 1)}}`;
 </script>
 
 <section class="lev" class:fit use:fitToWindow={on => (fit = on)}>
@@ -26,11 +39,11 @@
     <h1>Debt makes equity riskier</h1>
     <p class="lede">Same assets, two possible futures. Debt is a fixed claim paid first; equity takes what is left.</p>
     <dl class="kpis" aria-live="polite">
-      <div><dt>r<sub>E</sub></dt><dd class="eq">{fmtPct(m.rE, 1)}</dd></div>
+      <div><dt><Tex tex="r_E" /></dt><dd class="eq">{fmtPct(m.rE, 1)}</dd></div>
       <div><dt>WACC</dt><dd class:tax={taxOn}>{fmtPct(m.wacc, 1)}</dd></div>
     </dl>
     <label class="slider">
-      <span class="control-heading"><span>Debt raised at date 1, V<sub>D</sub></span><output>{fmtNum(vd)}</output></span>
+      <span class="control-heading"><span>Debt raised at date 1, <Tex tex="V_D" /></span><output>{fmtNum(vd)}</output></span>
       <span class="track">
         <span class="stop" style:left="{DEBT_MAX_PCT}%" aria-hidden="true"></span>
         <input type="range" min="0" max={DEBT_MAX} step="1" bind:value={vd} style:width="{DEBT_MAX_PCT}%" aria-describedby="lev-stop" />
@@ -40,7 +53,7 @@
     </label>
     <div class="taxes" role="group" aria-label="Corporate tax">
       <button type="button" aria-pressed={!taxOn} on:click={() => (taxOn = false)}>No taxes</button>
-      <button type="button" class="on-tax" aria-pressed={taxOn} on:click={() => (taxOn = true)}>Taxes, τ = {TAX_PCT}%</button>
+      <button type="button" class="on-tax" aria-pressed={taxOn} on:click={() => (taxOn = true)}>Taxes, <Tex tex={TEX_TAU} /></button>
     </div>
   </aside>
 
@@ -52,8 +65,8 @@
           <path d="M25,50 C38,50 39,{upMid} 52,{upMid}" />
           <path d="M25,50 C38,50 39,{downMid} 52,{downMid}" />
         </svg>
-        <span class="half" style:top="25%">½</span>
-        <span class="half" style:top="66%">½</span>
+        <span class="half" style:top="25%"><Tex tex={HALF} /></span>
+        <span class="half" style:top="66%"><Tex tex={HALF} /></span>
 
         <span class="node-label" style:left="0" style:top="calc(50% - 42px)">Date 1 · worth 100</span>
         <div class="node" style:left="0" style:top="calc(50% - 22px)" style:width="25%">
@@ -61,14 +74,14 @@
           <div class="equity">{#if m.equityToday >= 12}{fmtNum(m.equityToday)}{/if}</div>
         </div>
 
-        <span class="node-label" style:left="52%" style:top="calc(10% - 20px)">Up ½ · worth 130</span>
+        <span class="node-label" style:left="52%" style:top="calc(10% - 20px)">Up <Tex tex={HALF} /> · worth 130</span>
         <div class="node" style:left="52%" style:top="10%" style:width="32.5%">
           <div class="debt" style:width="{g.debtUpShare}%">{#if m.debtOwed >= 12}{fmtNum(m.debtOwed)}{/if}</div>
           <div class="equity">{#if m.equityUp >= 12}{fmtNum(m.equityUp)}{/if}</div>
         </div>
         <span class="ret up" style:left="calc(84.5% + 14px)" style:top="calc(10% + 6px)">{fmtSigned(m.returnUp)}</span>
 
-        <span class="node-label" style:left="52%" style:top="calc(90% - 64px)">Down ½ · worth 90</span>
+        <span class="node-label" style:left="52%" style:top="calc(90% - 64px)">Down <Tex tex={HALF} /> · worth 90</span>
         <div class="node" style:left="52%" style:top="calc(90% - 44px)" style:width="22.5%">
           <div class="debt" style:width="{g.debtDownShare}%">{#if m.debtOwed >= 12}{fmtNum(m.debtOwed)}{/if}</div>
           <div class="equity">{#if m.equityDown >= 12}{fmtNum(m.equityDown)}{/if}</div>
@@ -83,8 +96,8 @@
         <span class="swing">40 swing</span>
       </div>
       <p class="expect">
-        <span>expected to equity = ½ × {fmtNum(m.equityUp)} + ½ × {fmtNum(m.equityDown)} = <strong>{fmtNum(m.equityExpected)}</strong></span>
-        <strong>r<sub>E</sub> = {fmtNum(m.equityExpected)} ÷ {fmtNum(m.equityToday)} - 1 = <span class="eq">{fmtPct(m.rE, 1)}</span></strong>
+        <span>expected to equity <Tex tex={texExpected} /> <strong><Tex tex={texExpectedValue} /></strong></span>
+        <strong><Tex tex={texRE} /> <span class="eq"><Tex tex={texREValue} /></span></strong>
       </p>
     </div>
     <LeveragePanels {m} {g} {taxOn} taxPct={TAX_PCT} />
@@ -138,8 +151,9 @@
   .expect { display: flex; flex-wrap: wrap; gap: 4px 28px; margin: 0; font-size: .95rem; font-variant-numeric: tabular-nums; color: var(--muted); }
   .expect strong { color: var(--ink); }
   /* Fit mode: the tree takes the spare height above the three panels. */
-  .fit .tree-block { flex: 1.25 1 0; min-height: 0; }
-  .fit .tree { flex: 1 1 0; height: auto; min-height: 170px; }
+  .fit .tree-block { flex: 1 1 0; min-height: 0; }
+  .fit .tree { flex: 1 1 0; height: auto; min-height: 150px; }
+  .fit .main > :global(.panels) { flex-grow: 1.45; min-height: 270px; }
   @media (max-width: 1000px) {
     .lev { grid-template-columns: 1fr; }
     .side { border-right: none; border-bottom: 1px solid var(--rule); }
