@@ -74,7 +74,7 @@
       <span class="eq"><i style:background="var(--accent)"></i><Tex tex={TEX_RE} /></span>
       <span class="dbt"><i style:background="var(--debt-ink)"></i><Tex tex={TEX_RD} /></span>
       <span class:tax={taxOn}><i style:background={taxOn ? 'var(--tax)' : 'var(--ink)'}></i>WACC</span>
-      {#if taxOn}<span class="tax"><i class="dash"></i><Tex tex={TEX_RD_TAX} /></span>{/if}
+      {#if taxOn}<span class="dbt"><i class="dash"></i><Tex tex={TEX_RD_TAX} /></span>{/if}
     </div>
     <div class="chart">
       <div class="stopzone" style:left="{s.debtMaxPct}%"></div>
@@ -88,7 +88,7 @@
         <line x1="0" x2={s.debtMaxPct} y1={Y_WACC} y2={Y_WACC} class="wacc-line" class:faint={taxOn} />
         <line x1="0" x2={s.debtMaxPct} y1={Y_RD} y2={Y_RD} class="rd-line" />
         {#if taxOn}
-          <line x1="0" x2={s.debtMaxPct} y1={g.yRDTax} y2={g.yRDTax} class="tax-line dashed" />
+          <line x1="0" x2={s.debtMaxPct} y1={g.yRDTax} y2={g.yRDTax} class="rd-line dashed" />
           <line x1="0" x2={s.debtMaxPct} y1={Y_WACC} y2={g.yWaccTaxEnd} class="tax-line" />
         {/if}
         <path d={g.rEPath} class="re-line" />
@@ -170,7 +170,7 @@
   .legend { display: flex; gap: 4px 16px; font-size: var(--fs); font-weight: 600; white-space: nowrap; }
   .legend span { display: inline-flex; align-items: center; gap: 6px; }
   .legend i { display: inline-block; width: 22px; height: 4px; }
-  .legend i.dash { background: repeating-linear-gradient(90deg, var(--tax) 0 5px, transparent 5px 8px); }
+  .legend i.dash { background: repeating-linear-gradient(90deg, var(--debt-ink) 0 5px, transparent 5px 8px); }
   .chart { position: relative; flex: 1 1 0; min-height: 110px; margin: 22px 8px 26px 38px; border-left: 1px solid var(--ink); border-bottom: 1px solid var(--ink); }
   .stopzone { position: absolute; right: 0; top: 0; bottom: 0; background: repeating-linear-gradient(135deg, var(--rule) 0 4px, transparent 4px 8px); }
   .grid { position: absolute; left: 0; right: 0; border-top: 1px solid var(--rule); }
@@ -183,7 +183,7 @@
   .wacc-line.faint { opacity: .3; }
   .rd-line { stroke: var(--debt-ink); stroke-width: 3; }
   .tax-line { stroke: var(--tax); stroke-width: 3; }
-  .tax-line.dashed { stroke-width: 2.5; stroke-dasharray: 5 4; }
+  .rd-line.dashed { stroke-width: 2.5; stroke-dasharray: 5 4; }
   .re-line { stroke: var(--accent); stroke-width: 3.5; }
   .marker { stroke: var(--ink); stroke-width: 1; stroke-dasharray: 2 3; }
   .pt { position: absolute; width: 14px; height: 14px; border-radius: 50%; background: var(--ink); transform: translate(-50%, 50%); }
