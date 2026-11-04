@@ -39,7 +39,7 @@
 <section class="lev" class:fit use:fitToWindow={on => (fit = on)}>
   <aside class="side">
     <span class="eyebrow">Capital structure</span>
-    <h1>Modigliani Miller</h1>
+    <h1>Modigliani-Miller</h1>
     <p class="lede">Same assets, two possible futures. Debt is a fixed claim paid first; equity takes what is left.</p>
     <div class="examples" role="group" aria-label="Example">
       {#each Object.entries(SCENARIOS) as [k, sc]}
@@ -74,8 +74,9 @@
           <path d="M25,50 C38,50 39,{upMid} 52,{upMid}" />
           <path d="M25,50 C38,50 39,{downMid} 52,{downMid}" />
         </svg>
-        <span class="half" style:top="25%">½</span>
-        <span class="half" style:top="66%">½</span>
+        <!-- Each ½ sits just above its branch, which crosses x = 37% at about 37% and 63% of the height. -->
+        <span class="half" style:top="calc(37% - 8px)">½</span>
+        <span class="half" style:top="calc(63% - 8px)">½</span>
 
         <span class="node-label" style:left="0" style:top="calc(50% - 30px)">Date 1 · Assets worth {s.today}</span>
         <div class="node" style:left="0" style:top="calc(50% - 22px)" style:width="{s.nodeToday}%">
@@ -149,7 +150,7 @@
   .tree { position: relative; height: 236px; }
   .tree svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
   .tree path { fill: none; stroke: var(--debt-ink); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
-  .half { position: absolute; left: 37%; font-size: 1.05rem; font-weight: 700; color: var(--ink); }
+  .half { position: absolute; left: 37%; transform: translateY(-100%); font-size: 1.05rem; font-weight: 700; color: var(--ink); }
   .node-label { position: absolute; transform: translateY(-100%); font-size: .95rem; font-weight: 700; color: var(--ink); white-space: nowrap; }
   .node { position: absolute; height: 44px; display: flex; font-size: .8rem; font-weight: 600; font-variant-numeric: tabular-nums; }
   .node div { display: flex; align-items: center; justify-content: center; overflow: hidden; transition: width .25s ease; }
