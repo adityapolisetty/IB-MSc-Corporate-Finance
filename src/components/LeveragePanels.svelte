@@ -106,15 +106,15 @@
     <div class="barwrap">
       <span class="ra-label" style:left="{RA_POS}%"><Tex tex={TEX_RA} /> = {fmtPct(s.rA, 0)}</span>
       <div class="bar">
-        <div class="seg eq-bg" style:width="{g.stEq}%"></div>
-        <div class="seg debt-bg" style:width="{g.stDebt}%"></div>
+        <div class="seg eq-bg" style:width="{g.stEq}%">{#if g.stEq >= 10}<Tex tex={TEX_RE} />{/if}</div>
+        <div class="seg debt-bg" style:width="{g.stDebt}%">{#if g.stDebt >= 10}<Tex tex={TEX_RD} />{/if}</div>
         <div class="seg shield-bg" style:width="{g.stShield}%"></div>
         <div class="ra" style:left="{RA_POS}%" aria-hidden="true"></div>
       </div>
     </div>
     <div class="lines">
-      <i class="sw eq-bg"></i><span class="lbl eq">Equity</span><span class="eq">{m.wE.toFixed(2)} × {fmtPct(m.rE, 2)} = {fmtPct(m.equityPiece, 2)}</span>
-      <i class="sw debt-bg"></i><span class="lbl dbt">Debt</span><span class="dbt">{m.wD.toFixed(2)} × {fmtPct(m.rDCost, 1)} = {fmtPct(m.debtPiece, 2)}</span>
+      <i class="sw eq-bg"></i><span class="lbl eq">Cost of equity</span><span class="eq">{m.wE.toFixed(2)} × {fmtPct(m.rE, 2)} = {fmtPct(m.equityPiece, 2)}</span>
+      <i class="sw debt-bg"></i><span class="lbl dbt">Cost of debt</span><span class="dbt">{m.wD.toFixed(2)} × {fmtPct(m.rDCost, 1)} = {fmtPct(m.debtPiece, 2)}</span>
       {#if taxOn}<i class="sw shield-bg"></i><span class="lbl tax">Tax saved</span><span class="tax">{m.wD.toFixed(2)} × {fmtPct(RATE_DEBT, 0)} × {taxPct}% = {fmtPct(m.shieldPiece, 2)}</span>{/if}
       <span class="rule" aria-hidden="true"></span>
       <span></span><span class="lbl total" class:tax={taxOn}>WACC</span><span class="total" class:tax={taxOn}>{fmtPct(m.equityPiece, 2)} + {fmtPct(m.debtPiece, 2)} = {fmtPct(m.wacc, 2)}</span>
@@ -194,7 +194,8 @@
   .barwrap { position: relative; padding-top: 1.6em; }
   .ra-label { position: absolute; top: 0; transform: translateX(-50%); font-size: var(--fs-s); font-weight: 700; white-space: nowrap; }
   .bar { position: relative; display: flex; height: 36px; border-bottom: 1px solid var(--ink); }
-  .seg { height: 100%; transition: width .25s ease; }
+  .seg { height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; font-size: var(--fs); color: var(--ink); transition: width .25s ease; }
+  .seg.eq-bg { color: var(--paper); }
   .eq-bg { background: var(--accent); }
   .debt-bg { background: var(--debt); }
   .shield-bg { background: repeating-linear-gradient(135deg, var(--tax) 0 3px, var(--paper) 3px 6px); }
