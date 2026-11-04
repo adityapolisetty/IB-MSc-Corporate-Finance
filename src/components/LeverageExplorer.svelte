@@ -68,7 +68,7 @@
 
   <div class="main">
     <div class="tree-block">
-      <h2>Two futures, one fixed claim</h2>
+      <h2>Two potential futures, one fixed claim</h2>
       <div class="tree" bind:clientHeight={treeHeight}>
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
           <path d="M25,50 C38,50 39,{upMid} 52,{upMid}" />
