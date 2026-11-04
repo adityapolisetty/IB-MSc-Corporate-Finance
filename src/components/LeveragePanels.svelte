@@ -132,19 +132,20 @@
   .dbt { color: #3a3d45; }
 
   /* Return in each state */
-  .plot { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; justify-content: space-around; --lane: 22px; }
+  .plot { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; gap: 8px; --lane: 22px; }
+  .row { flex: 1 1 0; display: flex; flex-direction: column; }
   .head { display: flex; justify-content: space-between; align-items: baseline; white-space: nowrap; font-size: var(--fs); font-weight: 700; line-height: 1.25; }
   .vals { display: flex; flex-direction: column; align-items: flex-end; font-weight: 400; color: var(--muted); }
   .vals b { font-weight: 700; color: var(--ink); }
   .head.eq .vals b:not(.dn) { color: var(--accent); }
   .vals b.dn { color: var(--reject); }
-  .lane { position: relative; height: var(--lane); }
+  .lane { position: relative; flex: 1 1 auto; min-height: var(--lane); }
   .gl { position: absolute; top: 0; bottom: 0; border-left: 1px solid var(--rule); }
   .gl.zero { border-left-color: var(--ink); }
-  .band { position: absolute; top: calc(50% - 6px); height: 12px; box-sizing: border-box; border-left: 4px solid var(--reject); transition: left .3s cubic-bezier(.34, 1.56, .64, 1), width .3s cubic-bezier(.34, 1.56, .64, 1); }
+  .band { position: absolute; top: calc(50% - 8px); height: 16px; box-sizing: border-box; border-left: 4px solid var(--reject); transition: left .3s cubic-bezier(.34, 1.56, .64, 1), width .3s cubic-bezier(.34, 1.56, .64, 1); }
   .band.assets { background: var(--muted); }
   .band.equity { background: var(--accent); }
-  .dot { position: absolute; top: calc(50% - 10px); width: 20px; height: 20px; margin-left: -10px; border-radius: 50%; box-sizing: border-box; }
+  .dot { position: absolute; top: calc(50% - 12px); width: 24px; height: 24px; margin-left: -12px; border-radius: 50%; box-sizing: border-box; }
   .dot.ring { background: var(--paper); border: 3px solid var(--ink); }
   .dot.eq-ring { border-color: var(--accent); }
   .dot.debt { background: var(--debt-ink); }
