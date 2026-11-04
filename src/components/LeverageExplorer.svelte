@@ -20,17 +20,8 @@
   $: upMid = 10 + (22 / treeHeight) * 100;
   $: downMid = 90 - (22 / treeHeight) * 100;
 
-  // TeX for the page's math: String.raw keeps the backslashes, and % is escaped for TeX.
-  const tex = String.raw;
-  const texPct = (x, digits) => fmtPct(x, digits).replace('%', '\\%');
-  const HALF = tex`\tfrac{1}{2}`;
-  const TEX_TAU = tex`\tau = ${TAX_PCT}\%`;
-
-  // The expectation and r_E lines under the tree; the results are separate so they can take their own colour.
-  $: texExpected = tex`= \tfrac{1}{2} \times ${fmtNum(m.equityUp)} + \tfrac{1}{2} \times ${fmtNum(m.equityDown)} =`;
-  $: texExpectedValue = tex`\boldsymbol{${fmtNum(m.equityExpected)}}`;
-  $: texRE = tex`\boldsymbol{r_E = ${fmtNum(m.equityExpected)} \div ${fmtNum(m.equityToday)} - 1 =}`;
-  $: texREValue = tex`\boldsymbol{${texPct(m.rE, 1)}}`;
+  // KaTeX is for notation only; numbers stay in the page font. String.raw keeps the backslash.
+  const TEX_TAU = String.raw`\tau`;
 </script>
 
 <section class="lev" class:fit use:fitToWindow={on => (fit = on)}>
@@ -53,7 +44,7 @@
     </label>
     <div class="taxes" role="group" aria-label="Corporate tax">
       <button type="button" aria-pressed={!taxOn} on:click={() => (taxOn = false)}>No taxes</button>
-      <button type="button" class="on-tax" aria-pressed={taxOn} on:click={() => (taxOn = true)}>Taxes, <Tex tex={TEX_TAU} /></button>
+      <button type="button" class="on-tax" aria-pressed={taxOn} on:click={() => (taxOn = true)}>Taxes, <Tex tex={TEX_TAU} /> = {TAX_PCT}%</button>
     </div>
   </aside>
 
@@ -65,8 +56,8 @@
           <path d="M25,50 C38,50 39,{upMid} 52,{upMid}" />
           <path d="M25,50 C38,50 39,{downMid} 52,{downMid}" />
         </svg>
-        <span class="half" style:top="25%"><Tex tex={HALF} /></span>
-        <span class="half" style:top="66%"><Tex tex={HALF} /></span>
+        <span class="half" style:top="25%">½</span>
+        <span class="half" style:top="66%">½</span>
 
         <span class="node-label" style:left="0" style:top="calc(50% - 42px)">Date 1 · worth 100</span>
         <div class="node" style:left="0" style:top="calc(50% - 22px)" style:width="25%">
@@ -74,14 +65,14 @@
           <div class="equity">{#if m.equityToday >= 12}{fmtNum(m.equityToday)}{/if}</div>
         </div>
 
-        <span class="node-label" style:left="52%" style:top="calc(10% - 20px)">Up <Tex tex={HALF} /> · worth 130</span>
+        <span class="node-label" style:left="52%" style:top="calc(10% - 20px)">Up ½ · worth 130</span>
         <div class="node" style:left="52%" style:top="10%" style:width="32.5%">
           <div class="debt" style:width="{g.debtUpShare}%">{#if m.debtOwed >= 12}{fmtNum(m.debtOwed)}{/if}</div>
           <div class="equity">{#if m.equityUp >= 12}{fmtNum(m.equityUp)}{/if}</div>
         </div>
         <span class="ret up" style:left="calc(84.5% + 14px)" style:top="calc(10% + 6px)">{fmtSigned(m.returnUp)}</span>
 
-        <span class="node-label" style:left="52%" style:top="calc(90% - 64px)">Down <Tex tex={HALF} /> · worth 90</span>
+        <span class="node-label" style:left="52%" style:top="calc(90% - 64px)">Down ½ · worth 90</span>
         <div class="node" style:left="52%" style:top="calc(90% - 44px)" style:width="22.5%">
           <div class="debt" style:width="{g.debtDownShare}%">{#if m.debtOwed >= 12}{fmtNum(m.debtOwed)}{/if}</div>
           <div class="equity">{#if m.equityDown >= 12}{fmtNum(m.equityDown)}{/if}</div>
@@ -96,8 +87,8 @@
         <span class="swing">40 swing</span>
       </div>
       <p class="expect">
-        <span>expected to equity <Tex tex={texExpected} /> <strong><Tex tex={texExpectedValue} /></strong></span>
-        <strong><Tex tex={texRE} /> <span class="eq"><Tex tex={texREValue} /></span></strong>
+        <span>expected to equity = ½ × {fmtNum(m.equityUp)} + ½ × {fmtNum(m.equityDown)} = <strong>{fmtNum(m.equityExpected)}</strong></span>
+        <strong><Tex tex="r_E" /> = {fmtNum(m.equityExpected)} ÷ {fmtNum(m.equityToday)} - 1 = <span class="eq">{fmtPct(m.rE, 1)}</span></strong>
       </p>
     </div>
     <LeveragePanels {m} {g} {taxOn} taxPct={TAX_PCT} />

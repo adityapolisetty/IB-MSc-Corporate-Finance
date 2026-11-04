@@ -8,10 +8,8 @@
   export let taxOn;
   export let taxPct;
 
-  // TeX helpers: String.raw keeps backslashes, % is escaped, b() bolds a whole expression.
+  // KaTeX is for notation only; numbers stay in the page font. String.raw keeps backslashes.
   const tex = String.raw;
-  const pct = (x, d) => fmtPct(x, d).replace('%', '\\%');
-  const b = s => tex`\boldsymbol{${s}}`;
 
   // Return panel: the fixed assets row and the shared grid ticks.
   const A_DOWN = ASSETS_DOWN / ASSETS_TODAY - 1;
@@ -33,13 +31,8 @@
   const TEX_RD_TAX = tex`r_D(1-\tau)`;
   $: side = m.vd <= 55 ? '14px' : 'calc(-100% - 14px)';
 
-  // WACC panel: the bar's r_A marker and one bold TeX line per piece, in the bar's left-to-right order.
+  // WACC panel: the bar's r_A marker; one line per piece follows in the bar's left-to-right order.
   const RA_POS = stackPos(0.1);
-  const TEX_RA_LABEL = tex`r_A = 10\%`;
-  $: texEquity = b(tex`${m.wE.toFixed(2)} \times ${pct(m.rE, 2)} = ${pct(m.equityPiece, 2)}`);
-  $: texDebt = b(tex`${m.wD.toFixed(2)} \times ${pct(m.rDCost, 1)} = ${pct(m.debtPiece, 2)}`);
-  $: texShield = b(tex`${m.wD.toFixed(2)} \times ${pct(RATE_DEBT, 0)} \times ${taxPct}\% = ${pct(m.shieldPiece, 2)}`);
-  $: texTotal = b(tex`${pct(m.equityPiece, 2)} + ${pct(m.debtPiece, 2)} = ${pct(m.wacc, 2)}`);
 </script>
 
 <div class="panels">
@@ -113,7 +106,7 @@
   <div class="panel">
     <h3>WACC decomposed</h3>
     <div class="barwrap">
-      <span class="ra-label" style:left="{RA_POS}%"><Tex tex={TEX_RA_LABEL} /></span>
+      <span class="ra-label" style:left="{RA_POS}%"><Tex tex={TEX_RA} /> = 10%</span>
       <div class="bar">
         <div class="seg eq-bg" style:width="{g.stEq}%"></div>
         <div class="seg debt-bg" style:width="{g.stDebt}%"></div>
@@ -122,11 +115,11 @@
       </div>
     </div>
     <div class="lines">
-      <i class="sw eq-bg"></i><span class="lbl eq">equity</span><span class="eq"><Tex tex={texEquity} /></span>
-      <i class="sw debt-bg"></i><span class="lbl dbt">debt</span><span class="dbt"><Tex tex={texDebt} /></span>
-      {#if taxOn}<i class="sw shield-bg"></i><span class="lbl tax">tax saved</span><span class="tax"><Tex tex={texShield} /></span>{/if}
+      <i class="sw eq-bg"></i><span class="lbl eq">equity</span><span class="eq">{m.wE.toFixed(2)} × {fmtPct(m.rE, 2)} = {fmtPct(m.equityPiece, 2)}</span>
+      <i class="sw debt-bg"></i><span class="lbl dbt">debt</span><span class="dbt">{m.wD.toFixed(2)} × {fmtPct(m.rDCost, 1)} = {fmtPct(m.debtPiece, 2)}</span>
+      {#if taxOn}<i class="sw shield-bg"></i><span class="lbl tax">tax saved</span><span class="tax">{m.wD.toFixed(2)} × {fmtPct(RATE_DEBT, 0)} × {taxPct}% = {fmtPct(m.shieldPiece, 2)}</span>{/if}
       <span class="rule" aria-hidden="true"></span>
-      <span></span><span class="lbl total" class:tax={taxOn}>WACC</span><span class="total" class:tax={taxOn}><Tex tex={texTotal} /></span>
+      <span></span><span class="lbl total" class:tax={taxOn}>WACC</span><span class="total" class:tax={taxOn}>{fmtPct(m.equityPiece, 2)} + {fmtPct(m.debtPiece, 2)} = {fmtPct(m.wacc, 2)}</span>
     </div>
   </div>
 </div>
