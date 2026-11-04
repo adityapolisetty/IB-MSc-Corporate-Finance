@@ -39,7 +39,7 @@
 <section class="lev" class:fit use:fitToWindow={on => (fit = on)}>
   <aside class="side">
     <span class="eyebrow">Capital structure</span>
-    <h1>Debt makes equity riskier</h1>
+    <h1>Modigliani Miller</h1>
     <p class="lede">Same assets, two possible futures. Debt is a fixed claim paid first; equity takes what is left.</p>
     <div class="examples" role="group" aria-label="Example">
       {#each Object.entries(SCENARIOS) as [k, sc]}
