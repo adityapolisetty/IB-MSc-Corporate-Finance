@@ -3,20 +3,32 @@
   // and three panels (returns by state, costs of capital, WACC pieces); a switch adds corporate tax.
   import LeveragePanels from './LeveragePanels.svelte';
   import Tex from './Tex.svelte';
-  import { leverage, geometry, fmtNum, fmtPct, fmtSigned, DEBT_MAX, DEBT_MAX_PCT } from '../lib/leverage.js';
+  import { leverage, geometry, scenario, fmtNum, fmtPct, fmtSigned, SCENARIOS } from '../lib/leverage.js';
   import { fitToWindow } from '../lib/fit.js';
 
   // Opens on the Recap 4 example (debt of 50, no taxes); Recap 5 uses a 20% tax rate.
   const TAX_PCT = 20;
-  let vd = 50;
+  let key = 'recap';
+  let vd = SCENARIOS.recap.vdStart;
   let taxOn = false;
+
+  // Loading an example starts at its own debt level with no taxes (PS4 Question 1 assumes none).
+  function load(k) {
+    key = k;
+    vd = SCENARIOS[k].vdStart;
+    taxOn = false;
+  }
 
   // Fit mode and the tree's height (branch ends meet the 44px nodes at their centres).
   let fit = false;
   let treeHeight = 236;
 
-  $: m = leverage(vd, taxOn ? TAX_PCT / 100 : 0);
-  $: g = geometry(m, TAX_PCT / 100);
+  $: s = scenario(key);
+  $: m = leverage(vd, taxOn ? TAX_PCT / 100 : 0, s);
+  $: g = geometry(m, TAX_PCT / 100, s);
+
+  // Numbers inside the tree's bars hide below 12% of the date-1 value, where they no longer fit.
+  $: minLabel = 0.12 * s.today;
   $: upMid = 10 + (22 / treeHeight) * 100;
   $: downMid = 90 - (22 / treeHeight) * 100;
 
@@ -29,6 +41,11 @@
     <span class="eyebrow">Capital structure</span>
     <h1>Debt makes equity riskier</h1>
     <p class="lede">Same assets, two possible futures. Debt is a fixed claim paid first; equity takes what is left.</p>
+    <div class="examples" role="group" aria-label="Example">
+      {#each Object.entries(SCENARIOS) as [k, sc]}
+        <button type="button" aria-pressed={key === k} on:click={() => load(k)}>{sc.label}</button>
+      {/each}
+    </div>
     <dl class="kpis" aria-live="polite">
       <div><dt><Tex tex="r_E" /></dt><dd class="eq">{fmtPct(m.rE, 1)}</dd></div>
       <div><dt>WACC</dt><dd class:tax={taxOn}>{fmtPct(m.wacc, 1)}</dd></div>
@@ -36,11 +53,12 @@
     <label class="slider">
       <span class="control-heading"><span>Debt raised at date 1, <Tex tex="V_D" /></span><output>{fmtNum(vd)}</output></span>
       <span class="track">
-        <span class="stop" style:left="{DEBT_MAX_PCT}%" aria-hidden="true"></span>
-        <input type="range" min="0" max={DEBT_MAX} step="1" bind:value={vd} style:width="{DEBT_MAX_PCT}%" aria-describedby="lev-stop" />
+        <span class="stop" style:left="{s.debtMaxPct}%" aria-hidden="true"></span>
+        <!-- Rebuilt per example so the new max and step apply before the new value. -->
+        {#key key}<input type="range" min="0" max={s.debtMax} step={s.today / 100} bind:value={vd} style:width="{s.debtMaxPct}%" aria-describedby="lev-stop" />{/key}
       </span>
-      <span class="ticks" aria-hidden="true"><span style:left="0%">0</span><span style:left="50%">50</span><span style:left="{DEBT_MAX_PCT}%">85.7</span></span>
-      <span class="note" id="lev-stop">Hatched: beyond 85.7 the Bad state could not repay the debt.</span>
+      <span class="ticks" aria-hidden="true"><span style:left="0%">0</span><span style:left="50%">{fmtNum(s.today / 2)}</span><span style:left="{s.debtMaxPct}%">{s.debtMax.toFixed(1)}</span></span>
+      <span class="note" id="lev-stop">Hatched: beyond {s.debtMax.toFixed(1)} the Bad state could not repay the debt.</span>
     </label>
     <div class="taxes" role="group" aria-label="Corporate tax">
       <button type="button" aria-pressed={!taxOn} on:click={() => (taxOn = false)}>No taxes</button>
@@ -59,39 +77,39 @@
         <span class="half" style:top="25%">½</span>
         <span class="half" style:top="66%">½</span>
 
-        <span class="node-label" style:left="0" style:top="calc(50% - 30px)">Date 1 · worth 100</span>
-        <div class="node" style:left="0" style:top="calc(50% - 22px)" style:width="25%">
-          <div class="debt" style:width="{m.vd}%">{#if m.vd >= 12}{fmtNum(m.vd)}{/if}</div>
-          <div class="equity">{#if m.equityToday >= 12}{fmtNum(m.equityToday)}{/if}</div>
+        <span class="node-label" style:left="0" style:top="calc(50% - 30px)">Date 1 · worth {s.today}</span>
+        <div class="node" style:left="0" style:top="calc(50% - 22px)" style:width="{s.nodeToday}%">
+          <div class="debt" style:width="{(m.vd / s.today) * 100}%">{#if m.vd >= minLabel}{fmtNum(m.vd)}{/if}</div>
+          <div class="equity">{#if m.equityToday >= minLabel}{fmtNum(m.equityToday)}{/if}</div>
         </div>
 
-        <span class="node-label" style:left="52%" style:top="calc(10% - 8px)">Good ½ · worth 130</span>
-        <div class="node" style:left="52%" style:top="10%" style:width="32.5%">
-          <div class="debt" style:width="{g.debtUpShare}%">{#if m.debtOwed >= 12}{fmtNum(m.debtOwed)}{/if}</div>
-          <div class="equity">{#if m.equityUp >= 12}{fmtNum(m.equityUp)}{/if}</div>
+        <span class="node-label" style:left="52%" style:top="calc(10% - 8px)">Good ½ · worth {s.up}</span>
+        <div class="node" style:left="52%" style:top="10%" style:width="{s.nodeUp}%">
+          <div class="debt" style:width="{g.debtUpShare}%">{#if m.debtOwed >= minLabel}{fmtNum(m.debtOwed)}{/if}</div>
+          <div class="equity">{#if m.equityUp >= minLabel}{fmtNum(m.equityUp)}{/if}</div>
         </div>
-        <span class="ret up" style:left="calc(84.5% + 14px)" style:top="calc(10% + 6px)">{fmtSigned(m.returnUp)}</span>
+        <span class="ret up" style:left="calc({52 + s.nodeUp}% + 14px)" style:top="calc(10% + 6px)">{fmtSigned(m.returnUp)}</span>
 
-        <span class="node-label" style:left="52%" style:top="calc(90% - 52px)">Bad ½ · worth 90</span>
-        <div class="node" style:left="52%" style:top="calc(90% - 44px)" style:width="22.5%">
-          <div class="debt" style:width="{g.debtDownShare}%">{#if m.debtOwed >= 12}{fmtNum(m.debtOwed)}{/if}</div>
-          <div class="equity">{#if m.equityDown >= 12}{fmtNum(m.equityDown)}{/if}</div>
+        <span class="node-label" style:left="52%" style:top="calc(90% - 52px)">Bad ½ · worth {s.down}</span>
+        <div class="node" style:left="52%" style:top="calc(90% - 44px)" style:width="{s.nodeDown}%">
+          <div class="debt" style:width="{g.debtDownShare}%">{#if m.debtOwed >= minLabel}{fmtNum(m.debtOwed)}{/if}</div>
+          <div class="equity">{#if m.equityDown >= minLabel}{fmtNum(m.equityDown)}{/if}</div>
         </div>
-        <span class="ret down" style:left="calc(74.5% + 14px)" style:top="calc(90% - 38px)">{fmtSigned(m.returnDown)}</span>
+        <span class="ret down" style:left="calc({52 + s.nodeDown}% + 14px)" style:top="calc(90% - 38px)">{fmtSigned(m.returnDown)}</span>
 
-        <!-- The debt claim ends at the same place in both futures; equity's ends differ by the 40 swing. -->
+        <!-- The debt claim ends at the same place in both futures; equity's ends differ by the swing in assets. -->
         <div class="guide debt-edge" style:left="calc(52% + {g.debtEdge}%)" aria-hidden="true"></div>
-        <div class="guide" style:left="84.5%" style:top="calc(10% + 44px)" style:height="calc(40% - 49px)" aria-hidden="true"></div>
-        <div class="guide" style:left="74.5%" style:top="calc(50% + 5px)" style:height="calc(40% - 49px)" aria-hidden="true"></div>
-        <div class="bracket" aria-hidden="true"></div>
-        <span class="swing">40 swing</span>
+        <div class="guide" style:left="{52 + s.nodeUp}%" style:top="calc(10% + 44px)" style:height="calc(40% - 49px)" aria-hidden="true"></div>
+        <div class="guide" style:left="{52 + s.nodeDown}%" style:top="calc(50% + 5px)" style:height="calc(40% - 49px)" aria-hidden="true"></div>
+        <div class="bracket" style:left="{52 + s.nodeDown}%" style:width="{s.nodeUp - s.nodeDown}%" aria-hidden="true"></div>
+        <span class="swing" style:left="{52 + s.nodeDown}%" style:width="{s.nodeUp - s.nodeDown}%">{fmtNum(s.up - s.down)} swing</span>
       </div>
       <p class="expect">
         <span>Expected to equity = ½ × {fmtNum(m.equityUp)} + ½ × {fmtNum(m.equityDown)} = <strong>{fmtNum(m.equityExpected)}</strong></span>
         <strong><Tex tex="r_E" /> = {fmtNum(m.equityExpected)} ÷ {fmtNum(m.equityToday)} - 1 = <span class="eq">{fmtPct(m.rE, 1)}</span></strong>
       </p>
     </div>
-    <LeveragePanels {m} {g} {taxOn} taxPct={TAX_PCT} />
+    <LeveragePanels {m} {g} {s} {taxOn} taxPct={TAX_PCT} />
   </div>
 </section>
 
@@ -116,9 +134,9 @@
   .ticks span { position: absolute; transform: translateX(-50%); }
   .ticks span:first-child { transform: none; }
   .note { font-size: .78rem; color: var(--muted); }
-  .taxes { display: flex; gap: 6px; }
-  .taxes button { flex: 1; min-height: 44px; border: 1px solid var(--debt); border-radius: 8px; background: var(--paper); color: var(--ink); font: 600 .9rem var(--font-body); cursor: pointer; }
-  .taxes button[aria-pressed='true'] { background: var(--accent); border-color: var(--accent); color: var(--paper); }
+  .taxes, .examples { display: flex; gap: 6px; }
+  .taxes button, .examples button { flex: 1; min-height: 44px; border: 1px solid var(--debt); border-radius: 8px; background: var(--paper); color: var(--ink); font: 600 .9rem var(--font-body); cursor: pointer; }
+  .taxes button[aria-pressed='true'], .examples button[aria-pressed='true'] { background: var(--accent); border-color: var(--accent); color: var(--paper); }
   .taxes button.on-tax[aria-pressed='true'] { background: var(--tax); border-color: var(--tax); }
   .main { display: flex; flex-direction: column; min-width: 0; }
   .tree-block { display: flex; flex-direction: column; gap: 8px; padding: 14px 24px 12px; border-bottom: 1px solid var(--rule); }
@@ -137,8 +155,8 @@
   .ret.down { color: var(--reject); }
   .guide { position: absolute; border-left: 1px dashed var(--muted); }
   .guide.debt-edge { top: calc(10% - 6px); height: calc(80% + 12px); border-left: 1.5px dashed var(--debt-ink); }
-  .bracket { position: absolute; left: 74.5%; width: 10%; top: calc(50% - 5px); height: 10px; box-sizing: border-box; border: 1.5px solid var(--ink); border-top: 0; }
-  .swing { position: absolute; left: 74.5%; width: 10%; top: calc(50% + 9px); text-align: center; font-size: .75rem; font-weight: 600; }
+  .bracket { position: absolute; top: calc(50% - 5px); height: 10px; box-sizing: border-box; border: 1.5px solid var(--ink); border-top: 0; }
+  .swing { position: absolute; top: calc(50% + 9px); text-align: center; font-size: .75rem; font-weight: 600; }
   .expect { display: flex; flex-wrap: wrap; gap: 4px 28px; margin: 0; font-size: .95rem; font-variant-numeric: tabular-nums; color: var(--muted); }
   .expect strong { color: var(--ink); }
   /* Fit mode: the tree takes the spare height above the three panels. */

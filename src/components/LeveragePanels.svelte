@@ -2,35 +2,33 @@
   // Three live panels under the event tree: returns in each state, costs of capital against V_D,
   // and the WACC decomposed into its weighted pieces. Chart positions are percent of each box.
   import Tex from './Tex.svelte';
-  import { fmtPct, fmtSigned, DEBT_MAX_PCT, ASSETS_TODAY, ASSETS_UP, ASSETS_DOWN, RATE_DEBT, returnPos, ratePos, stackPos } from '../lib/leverage.js';
+  import { fmtPct, fmtSigned, RATE_DEBT } from '../lib/leverage.js';
   export let m;
   export let g;
+  export let s;
   export let taxOn;
   export let taxPct;
 
   // KaTeX is for notation only; numbers stay in the page font. String.raw keeps backslashes.
   const tex = String.raw;
-
-  // Return panel: the fixed assets row and the shared grid ticks.
-  const A_DOWN = ASSETS_DOWN / ASSETS_TODAY - 1;
-  const A_UP = ASSETS_UP / ASSETS_TODAY - 1;
-  const A_EXP = (A_DOWN + A_UP) / 2;
-  const RET_TICKS = [{ v: -100, t: '-100%' }, { v: 0, t: '0' }, { v: 100, t: '+100%' }, { v: 180, t: '+180%' }];
   const TEX_RA = tex`r_A`;
   const TEX_RD = tex`r_D`;
   const TEX_RE = tex`r_E`;
-
-  // Costs panel: axis ticks and the two flat lines; labels flip left once r_E gets steep.
-  const RATE_TICKS = [0, 10, 20, 30, 40];
-  const X_TICKS = [0, 20, 40, 60, 80];
-  const Y_WACC = 100 - ratePos(0.1);
-  const Y_RD = 100 - ratePos(RATE_DEBT);
   const TEX_VD = tex`V_D`;
   const TEX_RD_TAX = tex`r_D(1-\tau)`;
-  $: side = m.vd <= 55 ? '14px' : 'calc(-100% - 14px)';
+
+  // Return panel: the example's fixed assets row and the shared grid ticks.
+  $: A_DOWN = s.retDown;
+  $: A_UP = s.retUp;
+  $: RET_TICKS = s.retTicks.map(v => ({ v, t: v === 0 ? '0' : `${v > 0 ? '+' : ''}${v}%` }));
+
+  // Costs panel: the two flat lines; value labels flip left once r_E gets steep.
+  $: Y_WACC = 100 - s.ratePos(s.rA);
+  $: Y_RD = 100 - s.ratePos(RATE_DEBT);
+  $: side = g.x <= 55 ? '14px' : 'calc(-100% - 14px)';
 
   // WACC panel: the bar's r_A marker; one line per piece follows in the bar's left-to-right order.
-  const RA_POS = stackPos(0.1);
+  $: RA_POS = s.stackPos(s.rA);
 </script>
 
 <div class="panels">
@@ -40,31 +38,31 @@
       <div class="row">
         <div class="head"><span><Tex tex={TEX_RA} /> Assets</span><span class="vals"><span><b>{fmtSigned(A_UP)}</b> in Good state</span><span><b class="dn">{fmtSigned(A_DOWN)}</b> in Bad state</span></span></div>
         <div class="lane">
-          {#each RET_TICKS as k}<i class="gl" class:zero={k.v === 0} style:left="{returnPos(k.v / 100)}%"></i>{/each}
-          <div class="band assets" style:left="{returnPos(A_DOWN)}%" style:width="{returnPos(A_UP) - returnPos(A_DOWN)}%"></div>
-          <div class="dot ring" style:left="{returnPos(A_EXP)}%"></div>
-          <span class="mean" style:left="{returnPos(A_EXP)}%">Mean {fmtPct(A_EXP, 1)}</span>
+          {#each RET_TICKS as k}<i class="gl" class:zero={k.v === 0} style:left="{s.returnPos(k.v / 100)}%"></i>{/each}
+          <div class="band assets" style:left="{s.returnPos(A_DOWN)}%" style:width="{s.returnPos(A_UP) - s.returnPos(A_DOWN)}%"></div>
+          <div class="dot ring" style:left="{s.returnPos(s.rA)}%"></div>
+          <span class="mean" style:left="{s.returnPos(s.rA)}%">Mean {fmtPct(s.rA, 1)}</span>
         </div>
       </div>
       <div class="row">
         <div class="head"><span><Tex tex={TEX_RD} /> Debt</span><span class="vals"><span><b>{fmtSigned(RATE_DEBT)}</b> in Good state</span><span><b>{fmtSigned(RATE_DEBT)}</b> in Bad state</span></span></div>
         <div class="lane">
-          {#each RET_TICKS as k}<i class="gl" class:zero={k.v === 0} style:left="{returnPos(k.v / 100)}%"></i>{/each}
-          <div class="dot debt" style:left="{returnPos(RATE_DEBT)}%"></div>
-          <span class="mean dbt" style:left="{returnPos(RATE_DEBT)}%">Mean {fmtPct(RATE_DEBT, 1)}</span>
+          {#each RET_TICKS as k}<i class="gl" class:zero={k.v === 0} style:left="{s.returnPos(k.v / 100)}%"></i>{/each}
+          <div class="dot debt" style:left="{s.returnPos(RATE_DEBT)}%"></div>
+          <span class="mean dbt" style:left="{s.returnPos(RATE_DEBT)}%">Mean {fmtPct(RATE_DEBT, 1)}</span>
         </div>
       </div>
       <div class="row">
         <div class="head eq"><span><Tex tex={TEX_RE} /> Equity</span><span class="vals"><span><b>{fmtSigned(m.returnUp)}</b> in Good state</span><span><b class="dn">{fmtSigned(m.returnDown)}</b> in Bad state</span></span></div>
         <div class="lane">
-          {#each RET_TICKS as k}<i class="gl" class:zero={k.v === 0} style:left="{returnPos(k.v / 100)}%"></i>{/each}
+          {#each RET_TICKS as k}<i class="gl" class:zero={k.v === 0} style:left="{s.returnPos(k.v / 100)}%"></i>{/each}
           <div class="band equity" style:left="{g.retDown}%" style:width="{g.retUp - g.retDown}%"></div>
           <div class="dot ring eq-ring" style:left="{g.retExp}%"></div>
           <span class="mean eq" style:left="{g.retExp}%">Mean {fmtPct(m.rE, 1)}</span>
         </div>
       </div>
       <div class="axis" aria-hidden="true">
-        {#each RET_TICKS as k, i}<span class:first={i === 0} class:last={i === RET_TICKS.length - 1} style:left="{returnPos(k.v / 100)}%">{k.t}</span>{/each}
+        {#each RET_TICKS as k, i}<span class:first={i === 0} class:last={i === RET_TICKS.length - 1} style:left="{s.returnPos(k.v / 100)}%">{k.t}</span>{/each}
       </div>
     </div>
   </div>
@@ -78,35 +76,35 @@
       {#if taxOn}<span class="tax"><i class="dash"></i><Tex tex={TEX_RD_TAX} /></span>{/if}
     </div>
     <div class="chart">
-      <div class="stopzone" style:left="{DEBT_MAX_PCT}%"></div>
-      {#each RATE_TICKS as t}
-        {#if t > 0}<div class="grid" style:bottom="{ratePos(t / 100)}%"></div>{/if}
-        <div class="ylab" style:bottom="{ratePos(t / 100)}%">{t}%</div>
+      <div class="stopzone" style:left="{s.debtMaxPct}%"></div>
+      {#each s.rateTicks as t}
+        {#if t > 0}<div class="grid" style:bottom="{s.ratePos(t / 100)}%"></div>{/if}
+        <div class="ylab" style:bottom="{s.ratePos(t / 100)}%">{t}%</div>
       {/each}
-      {#each X_TICKS as t}<div class="xlab" style:left="{t}%">{t}</div>{/each}
+      {#each s.xTicks as t}<div class="xlab" style:left="{(t / s.today) * 100}%">{t}</div>{/each}
       <div class="xlab xtitle" style:left="100%"><Tex tex={TEX_VD} /></div>
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-        <line x1="0" x2={DEBT_MAX_PCT} y1={Y_WACC} y2={Y_WACC} class="wacc-line" class:faint={taxOn} />
-        <line x1="0" x2={DEBT_MAX_PCT} y1={Y_RD} y2={Y_RD} class="rd-line" />
+        <line x1="0" x2={s.debtMaxPct} y1={Y_WACC} y2={Y_WACC} class="wacc-line" class:faint={taxOn} />
+        <line x1="0" x2={s.debtMaxPct} y1={Y_RD} y2={Y_RD} class="rd-line" />
         {#if taxOn}
-          <line x1="0" x2={DEBT_MAX_PCT} y1={g.yRDTax} y2={g.yRDTax} class="tax-line dashed" />
-          <line x1="0" x2={DEBT_MAX_PCT} y1={Y_WACC} y2={g.yWaccTaxEnd} class="tax-line" />
+          <line x1="0" x2={s.debtMaxPct} y1={g.yRDTax} y2={g.yRDTax} class="tax-line dashed" />
+          <line x1="0" x2={s.debtMaxPct} y1={Y_WACC} y2={g.yWaccTaxEnd} class="tax-line" />
         {/if}
         <path d={g.rEPath} class="re-line" />
-        <line x1={m.vd} x2={m.vd} y1="0" y2="100" class="marker" />
+        <line x1={g.x} x2={g.x} y1="0" y2="100" class="marker" />
       </svg>
-      <div class="pt" class:tax={taxOn} style:left="{m.vd}%" style:bottom="{g.rateW}%"></div>
-      <div class="pt eq-pt" style:left="{m.vd}%" style:bottom="{g.rateE}%"></div>
+      <div class="pt" class:tax={taxOn} style:left="{g.x}%" style:bottom="{g.rateW}%"></div>
+      <div class="pt eq-pt" style:left="{g.x}%" style:bottom="{g.rateE}%"></div>
       <!-- r_E is never below WACC: its label sits above its dot and WACC's sits just under its own line. -->
-      <span class="val eq" style:left="{m.vd}%" style:bottom="calc({g.rateE}% + 12px)" style:transform="translateX({side})">{fmtPct(m.rE, 1)}</span>
-      <span class="val" class:tax={taxOn} style:left="{m.vd}%" style:bottom="calc({g.rateW}% - 5px)" style:transform="translate({side}, 100%)">{fmtPct(m.wacc, 1)}</span>
+      <span class="val eq" style:left="{g.x}%" style:bottom="calc({g.rateE}% + 12px)" style:transform="translateX({side})">{fmtPct(m.rE, 1)}</span>
+      <span class="val" class:tax={taxOn} style:left="{g.x}%" style:bottom="calc({g.rateW}% - 5px)" style:transform="translate({side}, 100%)">{fmtPct(m.wacc, 1)}</span>
     </div>
   </div>
 
   <div class="panel">
     <h3>WACC decomposed</h3>
     <div class="barwrap">
-      <span class="ra-label" style:left="{RA_POS}%"><Tex tex={TEX_RA} /> = 10%</span>
+      <span class="ra-label" style:left="{RA_POS}%"><Tex tex={TEX_RA} /> = {fmtPct(s.rA, 0)}</span>
       <div class="bar">
         <div class="seg eq-bg" style:width="{g.stEq}%"></div>
         <div class="seg debt-bg" style:width="{g.stDebt}%"></div>
