@@ -15,12 +15,10 @@
   const A_DOWN = ASSETS_DOWN / ASSETS_TODAY - 1;
   const A_UP = ASSETS_UP / ASSETS_TODAY - 1;
   const A_EXP = (A_DOWN + A_UP) / 2;
-  const A_SPREAD = ((A_UP - A_DOWN) * 100).toFixed(1);
   const RET_TICKS = [{ v: -100, t: '-100%' }, { v: 0, t: '0' }, { v: 100, t: '+100%' }, { v: 180, t: '+180%' }];
   const TEX_RA = tex`r_A`;
   const TEX_RD = tex`r_D`;
   const TEX_RE = tex`r_E`;
-  $: spread = (Math.round((m.returnUp - m.returnDown) * 1000) / 10).toFixed(1);
 
   // Costs panel: axis ticks and the two flat lines; labels flip left once r_E gets steep.
   const RATE_TICKS = [0, 10, 20, 30, 40];
@@ -66,7 +64,6 @@
         {#each RET_TICKS as k, i}<span class:first={i === 0} class:last={i === RET_TICKS.length - 1} style:left="{returnPos(k.v / 100)}%">{k.t}</span>{/each}
       </div>
     </div>
-    <p class="foot">Spread <b>{spread} pts</b> vs assets <b>{A_SPREAD} pts</b></p>
   </div>
 
   <div class="panel">
@@ -155,8 +152,6 @@
   .axis span { position: absolute; transform: translateX(-50%); }
   .axis .first { transform: none; }
   .axis .last { transform: translateX(-100%); }
-  .foot { margin: 0; font-size: var(--fs); white-space: nowrap; color: var(--muted); }
-  .foot b { color: var(--ink); }
 
   /* Costs of capital */
   .legend { display: flex; gap: 4px 16px; font-size: var(--fs); font-weight: 600; white-space: nowrap; }
