@@ -77,20 +77,25 @@
         <span class="half" style:top="25%">½</span>
         <span class="half" style:top="66%">½</span>
 
-        <span class="node-label" style:left="0" style:top="calc(50% - 30px)">Date 1 · worth {s.today}</span>
+        <span class="node-label" style:left="0" style:top="calc(50% - 30px)">Date 1 · Assets worth {s.today}</span>
         <div class="node" style:left="0" style:top="calc(50% - 22px)" style:width="{s.nodeToday}%">
           <div class="debt" style:width="{(m.vd / s.today) * 100}%">{#if m.vd >= minLabel}{fmtNum(m.vd)}{/if}</div>
           <div class="equity">{#if m.equityToday >= minLabel}{fmtNum(m.equityToday)}{/if}</div>
         </div>
+        <!-- Colour key under the date-1 bar, each word centred on its own part. -->
+        <div class="node-key" style:left="0" style:top="calc(50% + 28px)" style:width="{s.nodeToday}%">
+          <span class="dk" style:width="{(m.vd / s.today) * 100}%">{#if m.vd >= minLabel}Debt{/if}</span>
+          <span class="eq">{#if m.equityToday >= minLabel}Equity{/if}</span>
+        </div>
 
-        <span class="node-label" style:left="52%" style:top="calc(10% - 8px)">Good ½ · worth {s.up}</span>
+        <span class="node-label" style:left="52%" style:top="calc(10% - 8px)">Good ½ · Assets worth {s.up}</span>
         <div class="node" style:left="52%" style:top="10%" style:width="{s.nodeUp}%">
           <div class="debt" style:width="{g.debtUpShare}%">{#if m.debtOwed >= minLabel}{fmtNum(m.debtOwed)}{/if}</div>
           <div class="equity">{#if m.equityUp >= minLabel}{fmtNum(m.equityUp)}{/if}</div>
         </div>
         <span class="ret up" style:left="calc({52 + s.nodeUp}% + 14px)" style:top="calc(10% + 6px)">{fmtSigned(m.returnUp)}</span>
 
-        <span class="node-label" style:left="52%" style:top="calc(90% - 52px)">Bad ½ · worth {s.down}</span>
+        <span class="node-label" style:left="52%" style:top="calc(90% - 52px)">Bad ½ · Assets worth {s.down}</span>
         <div class="node" style:left="52%" style:top="calc(90% - 44px)" style:width="{s.nodeDown}%">
           <div class="debt" style:width="{g.debtDownShare}%">{#if m.debtOwed >= minLabel}{fmtNum(m.debtOwed)}{/if}</div>
           <div class="equity">{#if m.equityDown >= minLabel}{fmtNum(m.equityDown)}{/if}</div>
@@ -148,6 +153,10 @@
   .node-label { position: absolute; transform: translateY(-100%); font-size: .95rem; font-weight: 700; color: var(--ink); white-space: nowrap; }
   .node { position: absolute; height: 44px; display: flex; font-size: .8rem; font-weight: 600; font-variant-numeric: tabular-nums; }
   .node div { display: flex; align-items: center; justify-content: center; overflow: hidden; transition: width .25s ease; }
+  .node-key { position: absolute; display: flex; font-size: .95rem; font-weight: 700; }
+  .node-key span { text-align: center; white-space: nowrap; transition: width .25s ease; }
+  .node-key .dk { color: var(--debt-ink); }
+  .node-key .eq { flex-grow: 1; }
   .debt { background: var(--debt); color: var(--ink); }
   .equity { flex-grow: 1; background: var(--accent); color: var(--paper); }
   .ret { position: absolute; font-size: 1.6rem; font-weight: 700; font-variant-numeric: tabular-nums; }
