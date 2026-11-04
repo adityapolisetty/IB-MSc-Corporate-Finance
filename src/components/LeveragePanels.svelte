@@ -144,16 +144,16 @@
   .lane { position: relative; flex: 1 1 auto; min-height: var(--lane); }
   .gl { position: absolute; top: 0; bottom: 0; border-left: 1px solid var(--rule); }
   .gl.zero { border-left-color: var(--ink); }
-  .band { position: absolute; top: calc(50% - 4px); height: 8px; transition: left .3s cubic-bezier(.34, 1.56, .64, 1), width .3s cubic-bezier(.34, 1.56, .64, 1); }
+  .band { position: absolute; top: calc(50% - 1px); height: 2px; background: var(--ink); transition: left .3s cubic-bezier(.34, 1.56, .64, 1), width .3s cubic-bezier(.34, 1.56, .64, 1); }
   /* End stems ride on the bar so they move with it: Bad end in red, Good end in the bar's colour. */
-  .band::before, .band::after { content: ''; position: absolute; top: -8px; width: 3px; height: 24px; }
+  .band::before, .band::after { content: ''; position: absolute; top: -11px; width: 3px; height: 24px; }
   .band::before { left: -1.5px; background: var(--reject); }
-  .band::after { right: -1.5px; background: inherit; }
+  .band::after { right: -1.5px; }
+  .band.assets::after { background: var(--muted); }
+  .band.equity::after { background: var(--accent); }
   .mean { position: absolute; bottom: calc(50% + 15px); transform: translateX(-50%); padding: 0 3px; background: var(--paper); font-size: var(--fs-s); font-weight: 700; color: var(--ink); white-space: nowrap; }
   .mean.dbt { color: var(--debt-ink); }
   .mean.eq { color: var(--accent); }
-  .band.assets { background: var(--muted); }
-  .band.equity { background: var(--accent); }
   .dot { position: absolute; top: calc(50% - 12px); width: 24px; height: 24px; margin-left: -12px; border-radius: 50%; box-sizing: border-box; }
   .dot.ring { background: var(--paper); border: 3px solid var(--ink); }
   .dot.eq-ring { border-color: var(--accent); }
