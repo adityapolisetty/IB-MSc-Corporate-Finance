@@ -92,7 +92,9 @@
       <!-- PC: "Date 2" shares the heading's baseline, starting where the date-2 bars start (52%). -->
       <div class="tree-head">
         <h2>Two potential futures, one fixed claim</h2>
-        <span class="date2">Date 2</span>
+        <!-- "Date 2" spans the up bar plus the 14px gap, so "Return to equity" starts over the returns column. -->
+        <span class="date2" style:flex="0 0 calc({s.nodeUp}% + 14px)">Date 2</span>
+        <span class="date2 rhead">Return to equity</span>
       </div>
       <!-- Positions are percent of the tree: date-2 bars start at --x0 and widths scale by --f (52% and 1 on PC). -->
       <div class="tree" bind:clientHeight={treeHeight}>
@@ -105,9 +107,9 @@
           <path d="M26,50 C33,50 33,{upMid} 40,{upMid}" />
           <path d="M26,50 C33,50 33,{downMid} 40,{downMid}" />
         </svg>
-        <!-- Each ½ sits just above its branch, which crosses x = 37% at about 37% and 63% of the height. -->
-        <span class="half hi">½</span>
-        <span class="half lo">½</span>
+        <!-- Each arm label ends at x = 37%, where the branches cross about 37% and 63% of the height: Good above, Bad below. -->
+        <span class="half hi">Good ½</span>
+        <span class="half lo">Bad ½</span>
 
         <span class="node-label d1" style:left="0" style:top="calc(50% - 30px)">Date 1 <span class="sep">·</span> Assets worth {s.today}</span>
         <div class="node" bind:clientWidth={nodeW} style:left="0" style:top="calc(50% - 22px)" style:width="calc({s.nodeToday}% * var(--f))">
@@ -120,19 +122,21 @@
           <span class="eq">{#if m.equityToday >= minLabel}Equity{/if}</span>
         </div>
 
-        <span class="node-label" style:left="var(--x0)" style:top="calc(10% - 8px)"><span class="d2">Date 2</span>Good ½ · Assets worth {s.up}</span>
+        <span class="node-label" style:left="var(--x0)" style:top="calc(10% - 8px)"><span class="d2">Date 2</span>Assets worth {s.up}</span>
         <div class="node" style:left="var(--x0)" style:top="10%" style:width="calc({s.nodeUp}% * var(--f))">
           <div class="debt" style:width="{g.debtUpShare}%">{#if fits(m.debtOwed)}{fmtNum(m.debtOwed)}{/if}</div>
           <div class="equity">{#if fits(m.equityUp)}{fmtNum(m.equityUp)}{/if}</div>
         </div>
+        <!-- Narrow screens: the returns column gets its own heading inside the tree. -->
+        <span class="node-label rh" style:left="calc(var(--x0) + {s.nodeUp}% * var(--f) + var(--gap))" style:top="calc(10% - 8px)">Return to equity</span>
         <span class="ret up" style:left="calc(var(--x0) + {s.nodeUp}% * var(--f) + var(--gap))" style:top="calc(10% + 6px)">{fmtSigned(m.returnUp)}</span>
 
-        <span class="node-label bad" style:left="var(--x0)">Bad ½ · Assets worth {s.down}</span>
+        <span class="node-label bad" style:left="var(--x0)">Assets worth {s.down}</span>
         <div class="node" style:left="var(--x0)" style:top="calc(90% - 44px)" style:width="calc({s.nodeDown}% * var(--f))">
           <div class="debt" style:width="{g.debtDownShare}%">{#if fits(m.debtOwed)}{fmtNum(m.debtOwed)}{/if}</div>
           <div class="equity">{#if fits(m.equityDown)}{fmtNum(m.equityDown)}{/if}</div>
         </div>
-        <span class="ret down" style:left="calc(var(--x0) + {s.nodeDown}% * var(--f) + var(--gap))" style:top="calc(90% - 38px)">{fmtSigned(m.returnDown)}</span>
+        <span class="ret down" style:left="calc(var(--x0) + {s.nodeUp}% * var(--f) + var(--gap))" style:top="calc(90% - 38px)">{fmtSigned(m.returnDown)}</span>
 
         <!-- The debt claim ends at the same place in both futures; equity's ends differ by the swing in assets. -->
         <div class="guide debt-edge" style:left="calc(var(--x0) + {g.debtEdge}% * var(--f))" aria-hidden="true"></div>
@@ -198,17 +202,19 @@
   .tree-head { display: flex; align-items: baseline; margin-bottom: 6px; }
   .tree-head h2 { flex: 0 0 52%; }
   .date2 { font-size: .95rem; font-weight: 700; line-height: 1; color: var(--ink); white-space: nowrap; }
+  /* The returns heading may use the block's 24px right padding; it wraps only on narrow laptops. */
+  .date2.rhead { white-space: normal; margin-right: -24px; }
   .tree svg.ph, .note-ph { display: none; }
   .ctl { display: contents; }
   .tree svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
   .tree path { fill: none; stroke: var(--debt-ink); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
-  .half { position: absolute; left: 37%; transform: translateY(-100%); font-size: 1.05rem; font-weight: 700; color: var(--ink); }
+  .half { position: absolute; right: 63%; transform: translateY(-100%); font-size: 1.05rem; font-weight: 700; color: var(--ink); white-space: nowrap; }
   .half.hi { top: calc(37% - 8px); }
-  .half.lo { top: calc(63% - 8px); }
+  .half.lo { top: calc(63% + 8px); transform: none; }
   .node-label { position: absolute; transform: translateY(-100%); font-size: .95rem; font-weight: 700; color: var(--ink); white-space: nowrap; }
   .node-label.bad { top: calc(90% - 52px); }
   /* Narrow screens instead put "Date 2" one line above the Good label (the tree's top margin makes room). */
-  .node-label .d2 { display: none; line-height: 1.3; }
+  .node-label .d2, .node-label.rh { display: none; line-height: 1.3; }
   .node { position: absolute; height: 44px; display: flex; font-size: .8rem; font-weight: 600; font-variant-numeric: tabular-nums; }
   .node div { display: flex; align-items: center; justify-content: center; overflow: hidden; transition: width .25s ease; }
   .node-key { position: absolute; display: flex; font-size: .95rem; font-weight: 700; }
@@ -242,13 +248,14 @@
     .tree-head h2 { flex: auto; }
     .date2 { display: none; }
     .node-label .d2 { display: block; }
+    .node-label.rh { display: block; white-space: normal; right: 0; }
     .tree svg.pc { display: none; }
     .tree svg.ph { display: block; }
     .node-label { font-size: .78rem; }
     .node-label.d1 { white-space: normal; width: calc(var(--f) * 25%); line-height: 1.25; }
     .node-label.d1 .sep { display: block; height: 0; overflow: hidden; }
     .node-label.bad { top: calc(90% + 8px); transform: none; }
-    .half { left: 35.5%; font-size: .9rem; }
+    .half { right: 62%; font-size: .9rem; }
     .half.hi { top: calc(10% + 20px); }
     .half.lo { top: calc(90% - 20px); transform: none; }
     .node { font-size: .75rem; }
