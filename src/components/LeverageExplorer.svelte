@@ -60,10 +60,12 @@
       <span class="ticks" aria-hidden="true"><span style:left="0%">0</span><span style:left="50%">{fmtNum(s.today / 2)}</span><span style:left="{s.debtMaxPct}%">{s.debtMax.toFixed(1)}</span></span>
       <span class="note" id="lev-stop">Hatched: beyond {s.debtMax.toFixed(1)} the Bad state could not repay the debt.</span>
     </label>
-    <div class="taxes" role="group" aria-label="Corporate tax">
-      <button type="button" aria-pressed={!taxOn} on:click={() => (taxOn = false)}>No taxes</button>
-      <button type="button" class="on-tax" aria-pressed={taxOn} on:click={() => (taxOn = true)}>Taxes, <Tex tex={TEX_TAU} /> = {TAX_PCT}%</button>
-    </div>
+    {#if key !== 'ps4'}
+      <div class="taxes" role="group" aria-label="Corporate tax">
+        <button type="button" aria-pressed={!taxOn} on:click={() => (taxOn = false)}>No taxes</button>
+        <button type="button" class="on-tax" aria-pressed={taxOn} on:click={() => (taxOn = true)}>Taxes, <Tex tex={TEX_TAU} /> = {TAX_PCT}%</button>
+      </div>
+    {/if}
   </aside>
 
   <div class="main">
