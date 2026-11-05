@@ -179,14 +179,14 @@
   .xtitle { transform: translateX(-100%); color: var(--ink); }
   .chart svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
   .chart line, .chart path { fill: none; vector-effect: non-scaling-stroke; }
-  .wacc-line { stroke: var(--ink); stroke-width: 3; }
+  .wacc-line { stroke: var(--ink); stroke-width: 2; }
   .wacc-line.faint { opacity: .3; }
-  .rd-line { stroke: var(--debt-ink); stroke-width: 3; }
-  .tax-line { stroke: var(--tax); stroke-width: 3; }
-  .rd-line.dashed { stroke-width: 2.5; stroke-dasharray: 5 4; }
-  .re-line { stroke: var(--accent); stroke-width: 3.5; }
+  .rd-line { stroke: var(--debt-ink); stroke-width: 2; }
+  .tax-line { stroke: var(--tax); stroke-width: 2; }
+  .rd-line.dashed { stroke-width: 1.5; stroke-dasharray: 5 4; }
+  .re-line { stroke: var(--accent); stroke-width: 2; }
   .marker { stroke: var(--ink); stroke-width: 1; stroke-dasharray: 2 3; }
-  .pt { position: absolute; width: 14px; height: 14px; border-radius: 50%; background: var(--ink); transform: translate(-50%, 50%); }
+  .pt { position: absolute; width: 9px; height: 9px; border-radius: 50%; background: var(--ink); transform: translate(-50%, 50%); }
   .pt.tax { background: var(--tax); }
   .pt.eq-pt { background: var(--accent); }
   .pt.rd-pt { background: var(--debt-ink); }
