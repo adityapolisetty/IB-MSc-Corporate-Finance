@@ -28,8 +28,11 @@
   $: side = g.x <= 55 ? '14px' : 'calc(-100% - 14px)';
   $: otherSide = g.x <= 55 ? 'calc(-100% - 14px)' : '14px';
 
-  // WACC panel: the bar's r_A marker; one line per piece follows in the bar's left-to-right order.
-  $: RA_POS = s.stackPos(s.rA);
+  // WACC panel: weights stand on a 0-1 scale, returns on the costs chart's rate scale (a shared scale would flatten r_D).
+  $: BARS = [
+    { name: 'Equity', txt: 'eq', bars: [{ cls: 'eq-st', h: m.wE * 100, t: m.wE.toFixed(2), cap: 'weight' }, { cls: 'eq-bg', h: s.ratePos(m.rE), t: fmtPct(m.rE, 1), cap: 'return' }] },
+    { name: 'Debt', txt: 'dbt', bars: [{ cls: 'debt-st', h: m.wD * 100, t: m.wD.toFixed(2), cap: 'weight' }, { cls: 'debt-bg', h: s.ratePos(m.rDCost), t: fmtPct(m.rDCost, 1), cap: taxOn ? 'after tax' : 'return' }] }
+  ];
 </script>
 
 <div class="panels">
@@ -107,14 +110,22 @@
 
   <div class="panel">
     <h3>WACC decomposed</h3>
-    <div class="barwrap">
-      <span class="ra-label" style:left="{RA_POS}%"><Tex tex={TEX_RA} /> = {fmtPct(s.rA, 0)}</span>
-      <div class="bar">
-        <div class="seg eq-bg" style:width="{g.stEq}%">{#if g.stEq >= 10}<Tex tex={TEX_RE} />{/if}</div>
-        <div class="seg debt-bg" style:width="{g.stDebt}%">{#if g.stDebt >= 10}<Tex tex={TEX_RD} />{/if}</div>
-        <div class="seg shield-bg" style:width="{g.stShield}%"></div>
-        <div class="ra" style:left="{RA_POS}%" aria-hidden="true"></div>
-      </div>
+    <!-- Grouped by claim: striped weight, then solid return, each with its value on top. -->
+    <div class="cols">
+      {#each BARS as grp}
+        <div class="grp">
+          <div class="pair">
+            {#each grp.bars as b}
+              <div class="col">
+                <div class="b {b.cls}" style:height="{b.h}%"></div>
+                <span class="v {grp.txt}" style:bottom="calc({b.h}% + 3px)">{b.t}</span>
+              </div>
+            {/each}
+          </div>
+          <div class="caps">{#each grp.bars as b}<span>{b.cap}</span>{/each}</div>
+          <div class="gname {grp.txt}">{grp.name}</div>
+        </div>
+      {/each}
     </div>
     <div class="lines">
       <i class="sw eq-bg"></i><span class="lbl eq">Cost of equity</span><span class="eq">{m.wE.toFixed(2)} × {fmtPct(m.rE, 2)} = {fmtPct(m.equityPiece, 2)}</span>
@@ -196,16 +207,21 @@
   .val.rd { color: var(--debt-ink); }
 
   /* WACC decomposed */
-  .barwrap { position: relative; padding-top: 1.6em; }
-  .ra-label { position: absolute; top: 0; transform: translateX(-50%); font-size: var(--fs-s); font-weight: 700; white-space: nowrap; }
-  .bar { position: relative; display: flex; height: 36px; border-bottom: 1px solid var(--ink); }
-  .seg { height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; font-size: var(--fs); color: var(--ink); transition: width .25s ease; }
-  .seg.eq-bg { color: var(--paper); }
+  .cols { flex: 1 1 0; min-height: 90px; display: flex; justify-content: center; gap: 12%; }
+  .grp { flex: 0 1 150px; display: flex; flex-direction: column; min-height: 0; }
+  .pair { flex: 1 1 0; min-height: 0; display: flex; gap: 10px; padding-top: 1.5em; border-bottom: 1px solid var(--ink); }
+  .col { position: relative; flex: 1; }
+  .b { position: absolute; left: 0; right: 0; bottom: 0; transition: height .25s ease; }
+  .v { position: absolute; left: 50%; transform: translateX(-50%); font-size: var(--fs-s); font-weight: 700; line-height: 1.2; white-space: nowrap; transition: bottom .25s ease; }
+  .caps { display: flex; gap: 10px; margin-top: 3px; font-size: var(--fs-s); color: var(--muted); }
+  .caps span { flex: 1; text-align: center; white-space: nowrap; }
+  .gname { text-align: center; font-size: var(--fs); font-weight: 700; line-height: 1.3; }
   .eq-bg { background: var(--accent); }
   .debt-bg { background: var(--debt); }
+  .eq-st { background: repeating-linear-gradient(135deg, var(--accent) 0 2px, var(--paper) 2px 6px); box-shadow: inset 0 0 0 1.5px var(--accent); }
+  .debt-st { background: repeating-linear-gradient(135deg, var(--debt-ink) 0 2px, var(--paper) 2px 6px); box-shadow: inset 0 0 0 1.5px var(--debt-ink); }
   .shield-bg { background: repeating-linear-gradient(135deg, var(--tax) 0 3px, var(--paper) 3px 6px); }
-  .ra { position: absolute; top: -6px; bottom: -6px; border-left: 2px dashed var(--ink); }
-  .lines { flex: 1 1 0; display: grid; grid-template-columns: auto auto auto; justify-content: start; align-content: center; align-items: baseline; row-gap: .8em; font-size: var(--fs); font-weight: 700; white-space: nowrap; }
+  .lines { flex: none; display: grid; grid-template-columns: auto auto auto; justify-content: start; align-content: center; align-items: baseline; row-gap: .8em; font-size: var(--fs); font-weight: 700; white-space: nowrap; }
   .lbl { padding-right: .6em; }
   .sw { width: 1em; height: 1em; margin-right: .5em; border: 1px solid var(--ink); box-sizing: border-box; }
   .rule { grid-column: 1 / -1; height: 0; margin: -.3em 0 -.3em; border-top: 1px solid var(--rule); }
@@ -225,6 +241,7 @@
     .panels { flex: none; min-height: 0; }
     .plot, .row, .lines { flex: none; }
     .lane { flex: none; height: 60px; }
+    .cols { flex: none; height: 200px; }
     .legend { flex-wrap: wrap; }
   }
   /* Tablets: returns and costs side by side, the WACC panel full width underneath. */
@@ -235,7 +252,7 @@
   }
   @media (max-width: 560px) {
     .panel { padding: 14px; }
-    .bar { height: 40px; }
+    .cols { gap: 16%; }
     .lines { font-size: min(var(--fs), 14px); }
   }
 </style>
