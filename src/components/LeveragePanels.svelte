@@ -220,4 +220,22 @@
     .chart { flex: none; height: 180px; }
     .lines { gap: 8px 0; }
   }
+  /* Below PC width the panels take their natural height (the flex sizing above is for fit mode). */
+  @media (max-width: 999px) {
+    .panels { flex: none; min-height: 0; }
+    .plot, .row, .lines { flex: none; }
+    .lane { flex: none; height: 60px; }
+    .legend { flex-wrap: wrap; }
+  }
+  /* Tablets: returns and costs side by side, the WACC panel full width underneath. */
+  @media (min-width: 561px) and (max-width: 999px) {
+    .panels { grid-template-columns: 1fr 1fr; }
+    .panel + .panel { border-left: 1px solid var(--rule); border-top: none; }
+    .panel:nth-child(3) { grid-column: 1 / -1; border-left: none; border-top: 1px solid var(--rule); }
+  }
+  @media (max-width: 560px) {
+    .panel { padding: 14px; }
+    .bar { height: 40px; }
+    .lines { font-size: min(var(--fs), 14px); }
+  }
 </style>

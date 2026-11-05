@@ -5,6 +5,7 @@
   import Tex from './Tex.svelte';
   import { leverage, geometry, scenario, fmtNum, fmtPct, fmtSigned, SCENARIOS } from '../lib/leverage.js';
   import { fitToWindow } from '../lib/fit.js';
+  import { withBase } from '../lib/base.js';
 
   // Opens on the Recap 4 example (debt of 50, no taxes); Recap 5 uses a 20% tax rate.
   const TAX_PCT = 20;
@@ -22,6 +23,10 @@
   // Fit mode and the tree's height (branch ends meet the 44px nodes at their centres).
   let fit = false;
   let treeHeight = 236;
+  let nodeW = 225;
+
+  // The QR code opens full screen when clicked, so a projected page can be scanned from the back.
+  let qrBig = false;
 
   $: s = scenario(key);
   $: m = leverage(vd, taxOn ? TAX_PCT / 100 : 0, s);
@@ -29,6 +34,8 @@
 
   // Numbers inside the tree's bars hide below 12% of the date-1 value, where they no longer fit.
   $: minLabel = 0.12 * s.today;
+  // On a phone the bars are narrow, so a number also needs 18px of bar; nodeW is the date-1 bar's width in px.
+  $: fits = v => v >= minLabel && (v / s.today) * nodeW >= 18;
   $: upMid = 10 + (22 / treeHeight) * 100;
   $: downMid = 90 - (22 / treeHeight) * 100;
 
@@ -46,6 +53,8 @@
         <button type="button" aria-pressed={key === k} on:click={() => load(k)}>{sc.label}</button>
       {/each}
     </div>
+    <!-- Readouts and slider; on a phone this block stays pinned to the top of the screen. -->
+    <div class="ctl">
     <dl class="kpis" aria-live="polite">
       <div><dt><Tex tex="r_E" /></dt><dd class="eq">{fmtPct(m.rE, 1)}</dd></div>
       <div><dt>WACC</dt><dd class:tax={taxOn}>{fmtPct(m.wacc, 1)}</dd></div>
@@ -55,62 +64,78 @@
       <span class="track">
         <span class="stop" style:left="{s.debtMaxPct}%" aria-hidden="true"></span>
         <!-- Rebuilt per example so the new max and step apply before the new value. -->
-        {#key key}<input type="range" min="0" max={s.debtMax} step={s.today / 100} bind:value={vd} style:width="{s.debtMaxPct}%" aria-describedby="lev-stop" />{/key}
+        {#key key}<input type="range" min="0" max={s.debtMax} step={s.today / 100} bind:value={vd} style:width="{s.debtMaxPct}%" style:--fill="{(vd / s.debtMax) * 100}%" aria-describedby="lev-stop" />{/key}
       </span>
       <span class="ticks" aria-hidden="true"><span style:left="0%">0</span><span style:left="50%">{fmtNum(s.today / 2)}</span><span style:left="{s.debtMaxPct}%">{s.debtMax.toFixed(1)}</span></span>
       <span class="note" id="lev-stop">Hatched: beyond {s.debtMax.toFixed(1)} the Bad state could not repay the debt.</span>
     </label>
+    </div>
+    <!-- Phone only: the note moves out of the pinned block so the block stays short. -->
+    <p class="note note-ph">Hatched: beyond {s.debtMax.toFixed(1)} the Bad state could not repay the debt.</p>
     {#if key !== 'ps4'}
       <div class="taxes" role="group" aria-label="Corporate tax">
         <button type="button" aria-pressed={!taxOn} on:click={() => (taxOn = false)}>No taxes</button>
         <button type="button" class="on-tax" aria-pressed={taxOn} on:click={() => (taxOn = true)}>Taxes, <Tex tex={TEX_TAU} /> = {TAX_PCT}%</button>
       </div>
     {/if}
+    <!-- PC only: students scan this off the projected page; a click shows it full screen. -->
+    <div class="qr-slot">
+      <button type="button" class="qr" on:click={() => (qrBig = true)} aria-label="Show the QR code full screen">
+        <img src={withBase('leverage-qr.svg')} alt="" width="84" height="84" />
+        <span>Scan to open this page on your phone. Click to enlarge.</span>
+      </button>
+    </div>
   </aside>
 
   <div class="main">
     <div class="tree-block">
       <h2>Two potential futures, one fixed claim</h2>
+      <!-- Positions are percent of the tree: date-2 bars start at --x0 and widths scale by --f (52% and 1 on PC). -->
       <div class="tree" bind:clientHeight={treeHeight}>
-        <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <svg class="pc" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
           <path d="M25,50 C38,50 39,{upMid} 52,{upMid}" />
           <path d="M25,50 C38,50 39,{downMid} 52,{downMid}" />
         </svg>
+        <!-- Narrow screens: branches from the 26% bar end to the date-2 bars at 40% (matches --f and --x0 there). -->
+        <svg class="ph" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M26,50 C33,50 33,{upMid} 40,{upMid}" />
+          <path d="M26,50 C33,50 33,{downMid} 40,{downMid}" />
+        </svg>
         <!-- Each ½ sits just above its branch, which crosses x = 37% at about 37% and 63% of the height. -->
-        <span class="half" style:top="calc(37% - 8px)">½</span>
-        <span class="half" style:top="calc(63% - 8px)">½</span>
+        <span class="half hi">½</span>
+        <span class="half lo">½</span>
 
-        <span class="node-label" style:left="0" style:top="calc(50% - 30px)">Date 1 · Assets worth {s.today}</span>
-        <div class="node" style:left="0" style:top="calc(50% - 22px)" style:width="{s.nodeToday}%">
-          <div class="debt" style:width="{(m.vd / s.today) * 100}%">{#if m.vd >= minLabel}{fmtNum(m.vd)}{/if}</div>
-          <div class="equity">{#if m.equityToday >= minLabel}{fmtNum(m.equityToday)}{/if}</div>
+        <span class="node-label d1" style:left="0" style:top="calc(50% - 30px)">Date 1 <span class="sep">·</span> Assets worth {s.today}</span>
+        <div class="node" bind:clientWidth={nodeW} style:left="0" style:top="calc(50% - 22px)" style:width="calc({s.nodeToday}% * var(--f))">
+          <div class="debt" style:width="{(m.vd / s.today) * 100}%">{#if fits(m.vd)}{fmtNum(m.vd)}{/if}</div>
+          <div class="equity">{#if fits(m.equityToday)}{fmtNum(m.equityToday)}{/if}</div>
         </div>
         <!-- Colour key under the date-1 bar, each word centred on its own part. -->
-        <div class="node-key" style:left="0" style:top="calc(50% + 28px)" style:width="{s.nodeToday}%">
+        <div class="node-key" style:left="0" style:top="calc(50% + 28px)" style:width="calc({s.nodeToday}% * var(--f))">
           <span class="dk" style:width="{(m.vd / s.today) * 100}%">{#if m.vd >= minLabel}Debt{/if}</span>
           <span class="eq">{#if m.equityToday >= minLabel}Equity{/if}</span>
         </div>
 
-        <span class="node-label" style:left="52%" style:top="calc(10% - 8px)">Good ½ · Assets worth {s.up}</span>
-        <div class="node" style:left="52%" style:top="10%" style:width="{s.nodeUp}%">
-          <div class="debt" style:width="{g.debtUpShare}%">{#if m.debtOwed >= minLabel}{fmtNum(m.debtOwed)}{/if}</div>
-          <div class="equity">{#if m.equityUp >= minLabel}{fmtNum(m.equityUp)}{/if}</div>
+        <span class="node-label" style:left="var(--x0)" style:top="calc(10% - 8px)">Good ½ · Assets worth {s.up}</span>
+        <div class="node" style:left="var(--x0)" style:top="10%" style:width="calc({s.nodeUp}% * var(--f))">
+          <div class="debt" style:width="{g.debtUpShare}%">{#if fits(m.debtOwed)}{fmtNum(m.debtOwed)}{/if}</div>
+          <div class="equity">{#if fits(m.equityUp)}{fmtNum(m.equityUp)}{/if}</div>
         </div>
-        <span class="ret up" style:left="calc({52 + s.nodeUp}% + 14px)" style:top="calc(10% + 6px)">{fmtSigned(m.returnUp)}</span>
+        <span class="ret up" style:left="calc(var(--x0) + {s.nodeUp}% * var(--f) + var(--gap))" style:top="calc(10% + 6px)">{fmtSigned(m.returnUp)}</span>
 
-        <span class="node-label" style:left="52%" style:top="calc(90% - 52px)">Bad ½ · Assets worth {s.down}</span>
-        <div class="node" style:left="52%" style:top="calc(90% - 44px)" style:width="{s.nodeDown}%">
-          <div class="debt" style:width="{g.debtDownShare}%">{#if m.debtOwed >= minLabel}{fmtNum(m.debtOwed)}{/if}</div>
-          <div class="equity">{#if m.equityDown >= minLabel}{fmtNum(m.equityDown)}{/if}</div>
+        <span class="node-label bad" style:left="var(--x0)">Bad ½ · Assets worth {s.down}</span>
+        <div class="node" style:left="var(--x0)" style:top="calc(90% - 44px)" style:width="calc({s.nodeDown}% * var(--f))">
+          <div class="debt" style:width="{g.debtDownShare}%">{#if fits(m.debtOwed)}{fmtNum(m.debtOwed)}{/if}</div>
+          <div class="equity">{#if fits(m.equityDown)}{fmtNum(m.equityDown)}{/if}</div>
         </div>
-        <span class="ret down" style:left="calc({52 + s.nodeDown}% + 14px)" style:top="calc(90% - 38px)">{fmtSigned(m.returnDown)}</span>
+        <span class="ret down" style:left="calc(var(--x0) + {s.nodeDown}% * var(--f) + var(--gap))" style:top="calc(90% - 38px)">{fmtSigned(m.returnDown)}</span>
 
         <!-- The debt claim ends at the same place in both futures; equity's ends differ by the swing in assets. -->
-        <div class="guide debt-edge" style:left="calc(52% + {g.debtEdge}%)" aria-hidden="true"></div>
-        <div class="guide" style:left="{52 + s.nodeUp}%" style:top="calc(10% + 44px)" style:height="calc(40% - 49px)" aria-hidden="true"></div>
-        <div class="guide" style:left="{52 + s.nodeDown}%" style:top="calc(50% + 5px)" style:height="calc(40% - 49px)" aria-hidden="true"></div>
-        <div class="bracket" style:left="{52 + s.nodeDown}%" style:width="{s.nodeUp - s.nodeDown}%" aria-hidden="true"></div>
-        <span class="swing" style:left="{52 + s.nodeDown}%" style:width="{s.nodeUp - s.nodeDown}%">{fmtNum(s.up - s.down)} swing</span>
+        <div class="guide debt-edge" style:left="calc(var(--x0) + {g.debtEdge}% * var(--f))" aria-hidden="true"></div>
+        <div class="guide" style:left="calc(var(--x0) + {s.nodeUp}% * var(--f))" style:top="calc(10% + 44px)" style:height="calc(40% - 49px)" aria-hidden="true"></div>
+        <div class="guide" style:left="calc(var(--x0) + {s.nodeDown}% * var(--f))" style:top="calc(50% + 5px)" style:height="calc(40% - 49px)" aria-hidden="true"></div>
+        <div class="bracket" style:left="calc(var(--x0) + {s.nodeDown}% * var(--f))" style:width="calc({s.nodeUp - s.nodeDown}% * var(--f))" aria-hidden="true"></div>
+        <span class="swing" style:left="calc(var(--x0) + {s.nodeDown}% * var(--f))" style:width="calc({s.nodeUp - s.nodeDown}% * var(--f))">{fmtNum(s.up - s.down)} swing</span>
       </div>
       <p class="expect">
         <span>Payoff to equity ($) = ½ × {fmtNum(m.equityUp)} + ½ × {fmtNum(m.equityDown)} = <strong>{fmtNum(m.equityExpected)}</strong></span>
@@ -120,6 +145,14 @@
     <LeveragePanels {m} {g} {s} {taxOn} taxPct={TAX_PCT} />
   </div>
 </section>
+
+{#if qrBig}
+  <button type="button" class="qr-big" on:click={() => (qrBig = false)} aria-label="Close the QR code">
+    <img src={withBase('leverage-qr.svg')} alt="QR code linking to this page" />
+    <span>adityapolisetty.github.io/IB-MSc-Corporate-Finance/leverage</span>
+  </button>
+{/if}
+<svelte:window on:keydown={e => { if (e.key === 'Escape') qrBig = false; }} />
 
 <style>
   .lev { --debt: #c9ccd6; --debt-ink: #8a8e98; --tax: #0b5f73; display: grid; grid-template-columns: 306px minmax(0, 1fr); margin-top: 14px; border: 1px solid var(--rule); }
@@ -147,14 +180,26 @@
   .taxes button, .examples button { flex: 1; min-height: 40px; border: 1px solid var(--debt); border-radius: 8px; background: var(--paper); color: var(--ink); font: 600 .81rem var(--font-body); cursor: pointer; }
   .taxes button[aria-pressed='true'], .examples button[aria-pressed='true'] { background: var(--accent); border-color: var(--accent); color: var(--paper); }
   .taxes button.on-tax[aria-pressed='true'] { background: var(--tax); border-color: var(--tax); }
+  /* QR code: takes the sidebar's spare height (up to 84px) and hides when under 40px; the full-screen copy reads from the back of a room. */
+  .qr-slot { flex: 1 1 0; min-height: 0; margin-top: -14px; padding-top: 12px; display: flex; align-items: flex-end; container-type: size; }
+  .qr { display: flex; align-items: center; gap: 12px; height: min(84px, 100cqh); padding: 0; border: 0; background: none; text-align: left; font: .72rem/1.35 var(--font-body); color: var(--muted); cursor: zoom-in; }
+  .qr img { flex: none; width: auto; height: 100%; aspect-ratio: 1; }
+  @container (max-height: 39px) { .qr { display: none; } }
+  .qr-big { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; border: 0; background: rgba(255, 255, 255, .97); font: 600 1.1rem var(--font-body); color: var(--ink); cursor: zoom-out; }
+  .qr-big img { width: min(78vmin, 640px); height: min(78vmin, 640px); }
   .main { display: flex; flex-direction: column; min-width: 0; }
   .tree-block { display: flex; flex-direction: column; gap: 8px; padding: 14px 24px 12px; border-bottom: 1px solid var(--rule); }
   .tree-block h2 { margin: 0; font-size: 1.1rem; font-weight: 700; }
-  .tree { position: relative; height: 236px; }
+  .tree { --x0: 52%; --f: 1; --gap: 14px; position: relative; height: 236px; }
+  .tree svg.ph, .note-ph { display: none; }
+  .ctl { display: contents; }
   .tree svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
   .tree path { fill: none; stroke: var(--debt-ink); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
   .half { position: absolute; left: 37%; transform: translateY(-100%); font-size: 1.05rem; font-weight: 700; color: var(--ink); }
+  .half.hi { top: calc(37% - 8px); }
+  .half.lo { top: calc(63% - 8px); }
   .node-label { position: absolute; transform: translateY(-100%); font-size: .95rem; font-weight: 700; color: var(--ink); white-space: nowrap; }
+  .node-label.bad { top: calc(90% - 52px); }
   .node { position: absolute; height: 44px; display: flex; font-size: .8rem; font-weight: 600; font-variant-numeric: tabular-nums; }
   .node div { display: flex; align-items: center; justify-content: center; overflow: hidden; transition: width .25s ease; }
   .node-key { position: absolute; display: flex; font-size: .95rem; font-weight: 700; }
@@ -180,5 +225,61 @@
     .lev { grid-template-columns: 1fr; }
     .side { border-right: none; border-bottom: 1px solid var(--rule); }
     .ret { font-size: 1.2rem; }
+    .qr-slot { display: none; }
+  }
+  /* Tablets and phones: a compact tree (date-2 bars from 40%, widths x 1.04); the Bad label goes under its bar. */
+  @media (max-width: 899px) {
+    .tree { --x0: 40%; --f: 1.04; --gap: 8px; height: 304px; }
+    .tree svg.pc { display: none; }
+    .tree svg.ph { display: block; }
+    .node-label { font-size: .78rem; }
+    .node-label.d1 { white-space: normal; width: calc(var(--f) * 25%); line-height: 1.25; }
+    .node-label.d1 .sep { display: block; height: 0; overflow: hidden; }
+    .node-label.bad { top: calc(90% + 8px); transform: none; }
+    .half { left: 35.5%; font-size: .9rem; }
+    .half.hi { top: calc(10% + 20px); }
+    .half.lo { top: calc(90% - 20px); transform: none; }
+    .node { font-size: .75rem; }
+    .node-key { font-size: .78rem; }
+    .ret { font-size: .95rem; }
+    .swing { font-size: .7rem; line-height: 1.15; padding: 0 2px; box-sizing: border-box; }
+    .expect { flex-direction: column; gap: 2px; font-size: .82rem; line-height: 1.45; }
+  }
+  /* Tablets: title and examples on the left, readouts, slider and taxes on the right. */
+  @media (min-width: 561px) and (max-width: 999px) {
+    .side { display: grid; grid-template-columns: 1fr 1fr; column-gap: 28px; align-items: start; }
+    .side > .eyebrow, .side > h1, .side > .lede, .side > .examples { grid-column: 1; }
+    .ctl { display: grid; gap: 14px; grid-column: 2; grid-row: 1 / span 4; }
+    .taxes { grid-column: 2; grid-row: 5; }
+  }
+  /* Phones: one full-bleed column; the readouts and slider stay pinned at the top while the page scrolls. */
+  @media (max-width: 560px) {
+    .lev { display: flex; flex-direction: column; margin: 0 -22px; border-inline: 0; overflow-x: clip; }
+    .side { display: contents; }
+    .side > * { margin: 0 14px 12px; }
+    .side > .eyebrow { margin-top: 16px; margin-bottom: 0; }
+    .side h1 { margin: 0 14px 4px; font-size: 1.75rem; }
+    .examples button, .taxes button { min-height: 44px; }
+    .side > .ctl { display: grid; gap: 6px; position: sticky; top: 0; z-index: 4; margin: 0 0 12px; padding: 8px 14px 6px; background: var(--paper); border-bottom: 1px solid var(--rule); box-shadow: 0 2px 6px rgb(16 20 43 / 8%); }
+    .kpis { gap: 20px; }
+    .kpis div { flex-direction: row; align-items: baseline; gap: 6px; }
+    .kpis dd { font-size: 1.5rem; }
+    .slider { gap: 2px; }
+    .control-heading { font-size: .75rem; }
+    .control-heading output { font-size: 1.25rem; }
+    .track, .track input { height: 40px; }
+    .stop { top: 15px; }
+    .ticks { font-size: .65rem; height: 12px; }
+    .slider .note { display: none; }
+    .note-ph { display: block; }
+    /* A larger thumb for touch; vertical swipes on the track still scroll the page. */
+    .track input { -webkit-appearance: none; appearance: none; background: transparent; touch-action: pan-y; }
+    .track input::-webkit-slider-runnable-track { height: 10px; border-radius: 5px; background: linear-gradient(to right, var(--accent) var(--fill), var(--rule) var(--fill)); }
+    .track input::-webkit-slider-thumb { -webkit-appearance: none; width: 32px; height: 32px; margin-top: -11px; border-radius: 50%; background: var(--accent); border: 3px solid var(--paper); box-shadow: 0 1px 4px rgb(16 20 43 / 40%); }
+    .track input::-moz-range-track { height: 10px; border-radius: 5px; background: var(--rule); }
+    .track input::-moz-range-progress { height: 10px; border-radius: 5px; background: var(--accent); }
+    .track input::-moz-range-thumb { width: 26px; height: 26px; border-radius: 50%; background: var(--accent); border: 3px solid var(--paper); box-shadow: 0 1px 4px rgb(16 20 43 / 40%); }
+    .tree-block { padding: 14px 14px 12px; border-top: 1px solid var(--rule); }
+    .tree-block h2 { font-size: 1rem; }
   }
 </style>
