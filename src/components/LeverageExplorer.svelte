@@ -89,7 +89,11 @@
 
   <div class="main">
     <div class="tree-block">
-      <h2>Two potential futures, one fixed claim</h2>
+      <!-- PC: "Date 2" shares the heading's baseline, starting where the date-2 bars start (52%). -->
+      <div class="tree-head">
+        <h2>Two potential futures, one fixed claim</h2>
+        <span class="date2">Date 2</span>
+      </div>
       <!-- Positions are percent of the tree: date-2 bars start at --x0 and widths scale by --f (52% and 1 on PC). -->
       <div class="tree" bind:clientHeight={treeHeight}>
         <svg class="pc" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
@@ -116,7 +120,7 @@
           <span class="eq">{#if m.equityToday >= minLabel}Equity{/if}</span>
         </div>
 
-        <span class="node-label" style:left="var(--x0)" style:top="calc(10% - 8px)">Good ½ · Assets worth {s.up}</span>
+        <span class="node-label" style:left="var(--x0)" style:top="calc(10% - 8px)"><span class="d2">Date 2</span>Good ½ · Assets worth {s.up}</span>
         <div class="node" style:left="var(--x0)" style:top="10%" style:width="calc({s.nodeUp}% * var(--f))">
           <div class="debt" style:width="{g.debtUpShare}%">{#if fits(m.debtOwed)}{fmtNum(m.debtOwed)}{/if}</div>
           <div class="equity">{#if fits(m.equityUp)}{fmtNum(m.equityUp)}{/if}</div>
@@ -191,6 +195,9 @@
   .tree-block { display: flex; flex-direction: column; gap: 8px; padding: 14px 24px 12px; border-bottom: 1px solid var(--rule); }
   .tree-block h2 { margin: 0; font-size: 1.1rem; font-weight: 700; }
   .tree { --x0: 52%; --f: 1; --gap: 14px; position: relative; height: 236px; }
+  .tree-head { display: flex; align-items: baseline; margin-bottom: 6px; }
+  .tree-head h2 { flex: 0 0 52%; }
+  .date2 { font-size: .95rem; font-weight: 700; line-height: 1; color: var(--ink); white-space: nowrap; }
   .tree svg.ph, .note-ph { display: none; }
   .ctl { display: contents; }
   .tree svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
@@ -200,6 +207,8 @@
   .half.lo { top: calc(63% - 8px); }
   .node-label { position: absolute; transform: translateY(-100%); font-size: .95rem; font-weight: 700; color: var(--ink); white-space: nowrap; }
   .node-label.bad { top: calc(90% - 52px); }
+  /* Narrow screens instead put "Date 2" one line above the Good label (the tree's top margin makes room). */
+  .node-label .d2 { display: none; line-height: 1.3; }
   .node { position: absolute; height: 44px; display: flex; font-size: .8rem; font-weight: 600; font-variant-numeric: tabular-nums; }
   .node div { display: flex; align-items: center; justify-content: center; overflow: hidden; transition: width .25s ease; }
   .node-key { position: absolute; display: flex; font-size: .95rem; font-weight: 700; }
@@ -229,7 +238,10 @@
   }
   /* Tablets and phones: a compact tree (date-2 bars from 40%, widths x 1.04); the Bad label goes under its bar. */
   @media (max-width: 899px) {
-    .tree { --x0: 40%; --f: 1.04; --gap: 8px; height: 304px; }
+    .tree { --x0: 40%; --f: 1.04; --gap: 8px; height: 304px; margin-top: 14px; }
+    .tree-head h2 { flex: auto; }
+    .date2 { display: none; }
+    .node-label .d2 { display: block; }
     .tree svg.pc { display: none; }
     .tree svg.ph { display: block; }
     .node-label { font-size: .78rem; }

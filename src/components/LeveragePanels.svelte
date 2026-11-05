@@ -158,8 +158,8 @@
   .band.equity::after { background: var(--accent); }
   .mean { position: absolute; bottom: calc(50% + 15px); transform: translateX(-50%); padding: 0 3px; background: var(--paper); font-size: var(--fs-s); font-weight: 700; color: var(--ink); white-space: nowrap; }
   .mean.eq { color: var(--accent); }
-  .dot { position: absolute; top: calc(50% - 12px); width: 24px; height: 24px; margin-left: -12px; border-radius: 50%; box-sizing: border-box; }
-  .dot.ring { background: var(--paper); border: 3px solid var(--ink); }
+  .dot { position: absolute; top: calc(50% - 8px); width: 16px; height: 16px; margin-left: -8px; border-radius: 50%; box-sizing: border-box; }
+  .dot.ring { background: var(--paper); border: 2.5px solid var(--ink); }
   .dot.eq-ring { border-color: var(--accent); }
   .axis { position: relative; height: 1.3em; font-size: var(--fs-s); color: var(--muted); }
   .axis span { position: absolute; transform: translateX(-50%); }
