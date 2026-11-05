@@ -113,7 +113,7 @@
         <span class="swing" style:left="{52 + s.nodeDown}%" style:width="{s.nodeUp - s.nodeDown}%">{fmtNum(s.up - s.down)} swing</span>
       </div>
       <p class="expect">
-        <span>Expected to equity = ½ × {fmtNum(m.equityUp)} + ½ × {fmtNum(m.equityDown)} = <strong>{fmtNum(m.equityExpected)}</strong></span>
+        <span>Payoff to equity ($) = ½ × {fmtNum(m.equityUp)} + ½ × {fmtNum(m.equityDown)} = <strong>{fmtNum(m.equityExpected)}</strong></span>
         <strong><Tex tex="r_E" /> = {fmtNum(m.equityExpected)} ÷ {fmtNum(m.equityToday)} - 1 = <span class="eq">{fmtPct(m.rE, 1)}</span></strong>
       </p>
     </div>
