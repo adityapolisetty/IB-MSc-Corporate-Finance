@@ -122,28 +122,29 @@
 </section>
 
 <style>
-  .lev { --debt: #c9ccd6; --debt-ink: #8a8e98; --tax: #0b5f73; display: grid; grid-template-columns: 340px minmax(0, 1fr); margin-top: 14px; border: 1px solid var(--rule); }
-  .side { display: flex; flex-direction: column; gap: 16px; padding: 22px 24px; border-right: 1px solid var(--rule); }
-  .side h1 { margin: 0; font-size: 2.3rem; font-weight: 700; line-height: 1.05; letter-spacing: -.01em; }
-  .lede { margin: 0; color: var(--muted); font-size: .95rem; line-height: 1.45; }
-  .kpis { display: flex; gap: 32px; margin: 0; font-variant-numeric: tabular-nums; }
+  .lev { --debt: #c9ccd6; --debt-ink: #8a8e98; --tax: #0b5f73; display: grid; grid-template-columns: 306px minmax(0, 1fr); margin-top: 14px; border: 1px solid var(--rule); }
+  .side { display: flex; flex-direction: column; gap: 14px; padding: 20px 22px; border-right: 1px solid var(--rule); }
+  .side .eyebrow { font-size: .675rem; }
+  .side h1 { margin: 0; font-size: 2.07rem; font-weight: 700; line-height: 1.05; letter-spacing: -.01em; }
+  .lede { margin: 0; color: var(--muted); font-size: .855rem; line-height: 1.45; }
+  .kpis { display: flex; gap: 29px; margin: 0; font-variant-numeric: tabular-nums; }
   .kpis div { display: flex; flex-direction: column; gap: 2px; }
-  .kpis dt { font-size: .8rem; color: var(--muted); }
-  .kpis dd { margin: 0; font-size: 2.6rem; font-weight: 700; line-height: 1; color: var(--ink); }
+  .kpis dt { font-size: .72rem; color: var(--muted); }
+  .kpis dd { margin: 0; font-size: 2.34rem; font-weight: 700; line-height: 1; color: var(--ink); }
   .kpis dd.eq, .eq { color: var(--accent); }
   .kpis dd.tax { color: var(--tax); }
   .slider { display: grid; gap: 4px; }
-  .control-heading { display: flex; justify-content: space-between; align-items: baseline; color: var(--muted); font-size: .9rem; }
-  .control-heading output { color: var(--accent); font-size: 1.6rem; font-weight: 700; }
+  .control-heading { display: flex; justify-content: space-between; align-items: baseline; color: var(--muted); font-size: .81rem; }
+  .control-heading output { color: var(--accent); font-size: 1.44rem; font-weight: 700; }
   .track { position: relative; height: 26px; }
   .track input { position: absolute; left: 0; top: 0; height: 26px; margin: 0; accent-color: var(--accent); }
   .stop { position: absolute; right: 0; top: 8px; height: 10px; border-radius: 5px; background: repeating-linear-gradient(135deg, #d5d8e2 0 3px, var(--paper) 3px 7px); }
-  .ticks { position: relative; height: 14px; font-size: .75rem; color: var(--muted); }
+  .ticks { position: relative; height: 14px; font-size: .675rem; color: var(--muted); }
   .ticks span { position: absolute; transform: translateX(-50%); }
   .ticks span:first-child { transform: none; }
-  .note { font-size: .78rem; color: var(--muted); }
+  .note { font-size: .7rem; color: var(--muted); }
   .taxes, .examples { display: flex; gap: 6px; }
-  .taxes button, .examples button { flex: 1; min-height: 44px; border: 1px solid var(--debt); border-radius: 8px; background: var(--paper); color: var(--ink); font: 600 .9rem var(--font-body); cursor: pointer; }
+  .taxes button, .examples button { flex: 1; min-height: 40px; border: 1px solid var(--debt); border-radius: 8px; background: var(--paper); color: var(--ink); font: 600 .81rem var(--font-body); cursor: pointer; }
   .taxes button[aria-pressed='true'], .examples button[aria-pressed='true'] { background: var(--accent); border-color: var(--accent); color: var(--paper); }
   .taxes button.on-tax[aria-pressed='true'] { background: var(--tax); border-color: var(--tax); }
   .main { display: flex; flex-direction: column; min-width: 0; }
