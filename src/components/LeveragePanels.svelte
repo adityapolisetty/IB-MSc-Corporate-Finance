@@ -128,11 +128,11 @@
       {/each}
     </div>
     <div class="lines">
-      <i class="sw eq-bg"></i><span class="lbl eq">Cost of equity</span><span class="eq">{m.wE.toFixed(2)} × {fmtPct(m.rE, 2)} = {fmtPct(m.equityPiece, 2)}</span>
-      <i class="sw debt-bg"></i><span class="lbl dbt">Cost of debt</span><span class="dbt">{m.wD.toFixed(2)} × {fmtPct(m.rDCost, 1)} = {fmtPct(m.debtPiece, 2)}</span>
-      {#if taxOn}<i class="sw shield-bg"></i><span class="lbl tax">Tax saved</span><span class="tax">{m.wD.toFixed(2)} × {fmtPct(RATE_DEBT, 0)} × {taxPct}% = {fmtPct(m.shieldPiece, 2)}</span>{/if}
+      <span class="lbl eq">Equity portion of WACC</span><span class="eq">{m.wE.toFixed(2)} × {fmtPct(m.rE, 2)} = {fmtPct(m.equityPiece, 2)}</span>
+      <span class="lbl dbt-ol">Debt portion of WACC</span><span class="dbt-ol">{m.wD.toFixed(2)} × {fmtPct(m.rDCost, 1)} = {fmtPct(m.debtPiece, 2)}</span>
+      {#if taxOn}<span class="lbl tax">Tax saved</span><span class="tax">{m.wD.toFixed(2)} × {fmtPct(RATE_DEBT, 0)} × {taxPct}% = {fmtPct(m.shieldPiece, 2)}</span>{/if}
       <span class="rule" aria-hidden="true"></span>
-      <span></span><span class="lbl total" class:tax={taxOn}>WACC</span><span class="total" class:tax={taxOn}>{fmtPct(m.equityPiece, 2)} + {fmtPct(m.debtPiece, 2)} = {fmtPct(m.wacc, 2)}</span>
+      <span class="lbl total" class:tax={taxOn}>WACC</span><span class="total" class:tax={taxOn}>{fmtPct(m.equityPiece, 2)} + {fmtPct(m.debtPiece, 2)} = {fmtPct(m.wacc, 2)}</span>
     </div>
   </div>
 </div>
@@ -220,10 +220,18 @@
   .debt-bg { background: var(--debt); }
   .eq-st { background: repeating-linear-gradient(135deg, var(--accent) 0 2px, var(--paper) 2px 6px); box-shadow: inset 0 0 0 1.5px var(--accent); }
   .debt-st { background: repeating-linear-gradient(135deg, var(--debt-ink) 0 2px, var(--paper) 2px 6px); box-shadow: inset 0 0 0 1.5px var(--debt-ink); }
-  .shield-bg { background: repeating-linear-gradient(135deg, var(--tax) 0 3px, var(--paper) 3px 6px); }
-  .lines { flex: none; display: grid; grid-template-columns: auto auto auto; justify-content: start; align-content: center; align-items: baseline; row-gap: .8em; font-size: var(--fs); font-weight: 700; white-space: nowrap; }
-  .lbl { padding-right: .6em; }
-  .sw { width: 1em; height: 1em; margin-right: .5em; border: 1px solid var(--ink); box-sizing: border-box; }
+  .lines { flex: none; display: grid; grid-template-columns: auto auto; justify-content: start; align-content: center; align-items: baseline; row-gap: .8em; font-size: var(--fs); font-weight: 700; white-space: nowrap; }
+  /* Labels wrap on narrow panels; the products stay on one line. */
+  .lbl { padding-right: .6em; white-space: normal; }
+  /* Debt in the bars' light grey, outlined in ink so it stays legible on white. */
+  .dbt-ol { color: var(--debt); -webkit-text-stroke: 2px var(--ink); paint-order: stroke fill; }
+  /* Narrow panels (laptops near 1100px): each label goes on its own line above its product. */
+  @container (max-width: 270px) {
+    .lines { grid-template-columns: auto; row-gap: 0; }
+    .lbl { padding-right: 0; }
+    .lines > .lbl:not(:first-child) { margin-top: .5em; }
+    .lines .rule { margin: .5em 0 0; }
+  }
   .rule { grid-column: 1 / -1; height: 0; margin: -.3em 0 -.3em; border-top: 1px solid var(--rule); }
   .total { color: var(--ink); }
   .total.tax { color: var(--tax); }
